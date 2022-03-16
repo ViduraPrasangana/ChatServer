@@ -9,6 +9,7 @@ import java.net.Socket;
 public class ChatServer {
     public static void main(String[] args) throws IOException, ParseException {
         Socket socket = null;
+
         try{
             ServerSocket ss = new ServerSocket(5000);
             socket =ss.accept();

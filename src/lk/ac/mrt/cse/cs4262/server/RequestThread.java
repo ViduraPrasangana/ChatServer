@@ -1,27 +1,33 @@
 package lk.ac.mrt.cse.cs4262.server;
 
+import com.google.gson.Gson;
+import lk.ac.mrt.cse.cs4262.server.model.request.NewIdentityReq;
+import lk.ac.mrt.cse.cs4262.server.model.response.NewIdentity;
+import lk.ac.mrt.cse.cs4262.server.model.response.RoomChange;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.Socket;
 
 public class RequestThread implements Runnable{
 
     private Socket socket;
     private BufferedReader in;
+    private DataOutputStream out;
     private JSONParser parser = new JSONParser();
     private boolean run = true;
     private ResponseThread responseThread;
+    private Gson gson;
 
-    public RequestThread(Socket socket, ResponseThread responseThread ){
+
+    public RequestThread(Socket socket, ResponseThread responseThread ) throws IOException {
         this.socket = socket;
         this.responseThread = responseThread;
+        gson = new Gson();
+        out = new DataOutputStream(socket.getOutputStream());
     }
 
 
@@ -46,22 +52,27 @@ public class RequestThread implements Runnable{
 
     private void ReadRequest(Socket socket, JSONObject message) throws IOException {
         String type = (String) message.get("type");
+        System.out.println(type);
+        System.out.println(Constant.TYPE_NEWIDENTITY);
+        switch (type){
+            case Constant.TYPE_NEWIDENTITY -> {
+                NewIdentityReq newIdentityReq = gson.fromJson(message.toJSONString(),NewIdentityReq.class);
+                System.out.println(newIdentityReq.getIdentity());
 
-        if (type.equals("newidentity")){
-            System.out.println("bla bla bla");
-            JSONObject sendToClient1 = new JSONObject();
-            sendToClient1.put("type", "newidentity");
-            sendToClient1.put("approved", "true");
+                String response = gson.toJson(new NewIdentity("true"));
+                String response2 = gson.toJson(new RoomChange(newIdentityReq.getIdentity(), "","MainHall-s1"));
+                send(response);
+                send(response2);
 
-            responseThread.send(sendToClient1);
+            }
+            case Constant.TYPE_CREATEROOM -> {
 
-            JSONObject sendToClient2 = new JSONObject();
-            sendToClient2.put("type", "roomchange");
-            sendToClient2.put("identity", "Adel");
-            sendToClient2.put("former", "");
-            sendToClient2.put("roomid", "MainHall-s1");
-            responseThread.send(sendToClient2);
-
+            }
         }
+
+    }
+    public void send(String res) throws IOException {
+        out.write((res + "\n").getBytes("UTF-8"));
+        out.flush();
     }
 }
