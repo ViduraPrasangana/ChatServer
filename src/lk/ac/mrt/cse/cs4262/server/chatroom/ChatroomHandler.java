@@ -2,10 +2,32 @@ package lk.ac.mrt.cse.cs4262.server.chatroom;
 
 import java.util.ArrayList;
 
+// singleton class to maintain only one ChatroomHandler for the system
+
 public class ChatroomHandler {
 
-    //private final ArrayList<Chatroom> chatroomList = new ArrayList <Chatroom>();
-    private final ArrayList<String> chatroomList = new ArrayList <>(); //<chatroom id>
+    // static self reference to guarantee that chatroomHandler instance is per class
+    public static ChatroomHandler chatroomHandler;
+
+    private final ArrayList<String> chatroomList; // <chatroom id>
+
+    //private constructor to ensure that objects cannot be created externally
+    private ChatroomHandler(){
+        chatroomList = new ArrayList <>();
+    }
+
+
+    public static ChatroomHandler getInstance(){
+        if (chatroomHandler==null){
+            synchronized (ChatroomHandler.class){
+                if (chatroomHandler==null){
+                    chatroomHandler = new ChatroomHandler();
+                }
+            }
+
+        }
+        return chatroomHandler;
+    }
 
     public synchronized Boolean createRoom(int serverID,String chatRoomID, String ownerID) {
 
@@ -21,19 +43,7 @@ public class ChatroomHandler {
 
     }
 
-    public void joinRoom() {
-
-
+    public ArrayList<String> getChatroomList() {
+        return chatroomList;
     }
-
-    public void deleteRoom(String chatroomID) {
-
-
-    }
-
-    public void quitRoom( ){
-
-    }
-
-
 }
