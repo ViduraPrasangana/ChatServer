@@ -33,7 +33,6 @@ public class ServerConnectionHandler extends Thread {
     public void run() {
         while (true){
             try {
-                System.out.println("handler hold");
                 JSONObject message = (JSONObject) parser.parse(in.readLine());
                 ReadRequest (socket, message);
             } catch (IOException | ParseException e) {
