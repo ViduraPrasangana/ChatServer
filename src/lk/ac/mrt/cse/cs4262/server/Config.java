@@ -5,6 +5,7 @@ import lk.ac.mrt.cse.cs4262.server.model.Server;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -18,7 +19,7 @@ public class Config {
             Scanner configScanner = new Scanner(config);
             while (configScanner.hasNextLine()) {
                 String data = configScanner.nextLine();
-                String[] row = data.split("\\t");
+                String[] row = data.split("\\s+");
                 servers.put(row[0],new Server(row[0],row[1],Integer.parseInt(row[2]),Integer.parseInt(row[3])));
             }
             configScanner.close();
