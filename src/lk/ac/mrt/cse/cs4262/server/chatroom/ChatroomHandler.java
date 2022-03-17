@@ -46,4 +46,17 @@ public class ChatroomHandler {
     public ArrayList<String> getChatroomList() {
         return chatroomList;
     }
+
+    public void deleteRoom(String roomID){
+        synchronized(chatroomList){
+            chatroomList.remove(roomID);
+        }
+        // move all the users to mainhall
+
+
+    }
+
+    public void roomChange(String currentRoomID, String newRoomID){
+
+    }
 }
