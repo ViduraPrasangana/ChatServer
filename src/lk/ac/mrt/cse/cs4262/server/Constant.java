@@ -15,4 +15,6 @@ public class Constant {
     public static final String TYPE_DELETEROOM = "deleteroom";
     public static final String TYPE_MESSAGE = "message";
     public static final String TYPE_QUIT = "quit";
+
+    public static final String MAINHALL_PREFIX = "MainHall-";
 }
