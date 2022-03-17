@@ -9,14 +9,16 @@ public class Chatroom {
 
     private final String roomID;
     private final int serverID;
+    private final String ownerID; // client id
 
     //private final ArrayList <Client> clientList = new ArrayList <Client>();
-    private final ArrayList<String> clientList = new ArrayList <String>(); // <client id>
+    private final ArrayList<String> clientList = new ArrayList <>(); // <client id>
 
     //TODO : check sync keyword
-    public Chatroom(String roomID, int serverID) {
+    public Chatroom(String roomID, int serverID, String ownerID) {
         this.roomID = roomID;
         this.serverID = serverID;
+        this.ownerID = ownerID;
     }
 
 
@@ -36,6 +38,11 @@ public class Chatroom {
     public synchronized int getServerID() {
         return serverID;
     }
+
+    public synchronized String getOwnerID() {
+        return ownerID;
+    }
+
 
     public synchronized ArrayList <String> getClientList() {
         return clientList;
