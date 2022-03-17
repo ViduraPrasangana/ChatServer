@@ -8,14 +8,14 @@ import java.util.ArrayList;
 public class Chatroom {
 
     private final String roomID;
-    private final int serverID;
+    private final String serverID;
     private final String ownerID; // client id
 
     //private final ArrayList <Client> clientList = new ArrayList <Client>();
     private final ArrayList<String> clientList = new ArrayList <>(); // <client id>
 
     //TODO : check sync keyword
-    public Chatroom(String roomID, int serverID, String ownerID) {
+    public Chatroom(String roomID, String serverID, String ownerID) {
         this.roomID = roomID;
         this.serverID = serverID;
         this.ownerID = ownerID;
@@ -35,7 +35,7 @@ public class Chatroom {
         return roomID;
     }
 
-    public synchronized int getServerID() {
+    public synchronized String getServerID() {
         return serverID;
     }
 

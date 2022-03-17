@@ -1,23 +1,25 @@
 package lk.ac.mrt.cse.cs4262.server.client;
 
+import lk.ac.mrt.cse.cs4262.server.chatroom.Chatroom;
 import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
+import lk.ac.mrt.cse.cs4262.server.model.Server;
 
 import java.util.List;
 
 public class Client {
 
     private final String clientID;
-    private int serverID;
+    private Server server;
     private final ChatroomHandler chatroomHandler;
     private boolean isOwner;
-    private String chatroomID;
+    private Chatroom chatroom;
 
-    public Client (String clientID, int serverID){
+    public Client (String clientID, Server server){
         this.clientID = clientID;
-        this.serverID = serverID;
+        this.server = server;
         this.chatroomHandler = ChatroomHandler.getInstance();
         this.isOwner = false;
-        //this.chatroomID = //mainhall of the server;
+        this.chatroom = this.server.getMainhall();
 
     }
 
@@ -38,7 +40,7 @@ public class Client {
     public Boolean createRoom(String roomID){
         // check if the client is already an owner of a chatroom
         if (!isOwner){
-            Boolean result = chatroomHandler.createRoom(serverID,roomID,clientID);
+            Boolean result = chatroomHandler.createRoom(server.getServerId(),roomID,clientID);
             // When the client successfully creates a room, it automatically joins the room
             if (result){
                 this.isOwner = true;
@@ -70,19 +72,25 @@ public class Client {
 //
 //    }
 
-    // #deleteroom roomid - delete the room
-//    public Boolean deleteRoom(String roomID){
-//        // TODO: validate roomID
-//        //check if he/she is the owner
-//        if (){
-//            //delete room, send messages to the other servers
-//            //move users to mainhall, roomchange msg to all the members and all in the mainhalls
-//            // success msg to the client
-//           chatroomHandler.deleteRoom(roomID);
-//        }
-//
-//
-//    }
+   //  #deleteroom roomid - delete the room
+    public Boolean deleteRoom(String roomID){
+        // TODO: validate roomID
+        //check if he/she is the owner
+        if (this.chatroom.getOwnerID().equals(this.clientID)){
+            //delete room, informs other servers that this room is deleted
+            chatroomHandler.deleteRoom(roomID);
+            server.broadcastDeletion(roomID);
+            //move users to mainhall, roomchange msg to all the members and all in the mainhalls
+            chatroomHandler.changeRoom(roomID);
+            // success msg to the client
+            return true;
+        }
+        else{
+            return false;
+        }
+
+
+    }
 
 
     // pass message
@@ -98,8 +106,8 @@ public class Client {
 
 
     //setters and getters
-    public void setServerID(int serverID){
-        this.serverID = serverID;
+    public void setServer(Server server){
+        this.server = server;
     }
 
     public String getClientID(){

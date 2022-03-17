@@ -29,7 +29,7 @@ public class ChatroomHandler {
         return chatroomHandler;
     }
 
-    public synchronized Boolean createRoom(int serverID,String chatRoomID, String ownerID) {
+    public synchronized Boolean createRoom(String serverID,String chatRoomID, String ownerID) {
 
         //check if a room exists in the same name
         if (chatroomList.contains(chatRoomID)){
@@ -57,6 +57,11 @@ public class ChatroomHandler {
     }
 
     public void roomChange(String currentRoomID, String newRoomID){
+
+    }
+
+    public void changeRoom(String roomID) {
+        //get all members
 
     }
 }
