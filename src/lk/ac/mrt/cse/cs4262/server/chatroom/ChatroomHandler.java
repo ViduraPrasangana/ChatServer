@@ -1,5 +1,7 @@
 package lk.ac.mrt.cse.cs4262.server.chatroom;
 
+import lk.ac.mrt.cse.cs4262.server.client.Client;
+
 import java.util.ArrayList;
 
 // singleton class to maintain only one ChatroomHandler for the system
@@ -51,17 +53,19 @@ public class ChatroomHandler {
         synchronized(chatroomList){
             chatroomList.remove(roomID);
         }
-        // move all the users to mainhall
-
-
     }
 
-    public void roomChange(String currentRoomID, String newRoomID){
 
-    }
+    public void changeRoom(Chatroom chatroom) {
+        //get all members of the room
+        ArrayList<Client> clients = chatroom.getClientList();
+        //for each member: join mainhall
+        clients.forEach((client) -> client.joinMainhall());
+        //roomchange msg broadcast to all the clients in the old room + clients in the mainhall (= all the clients currently in the mainhall)
+        clients.forEach((client) -> client.getServer().broadcastRoomChangeClients(chatroom.getChatroomID(),client.getChatroom().getChatroomID(),client.getClientID(),client.getChatroom().getClientList()));
 
-    public void changeRoom(String roomID) {
-        //get all members
+
+
 
     }
 }

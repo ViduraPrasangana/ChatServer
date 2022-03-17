@@ -11,8 +11,8 @@ public class Chatroom {
     private final String serverID;
     private final String ownerID; // client id
 
-    //private final ArrayList <Client> clientList = new ArrayList <Client>();
-    private final ArrayList<String> clientList = new ArrayList <>(); // <client id>
+    private final ArrayList <Client> clientList = new ArrayList <>();
+    //private final ArrayList<String> clientList = new ArrayList <>(); // <client id>
 
     //TODO : check sync keyword
     public Chatroom(String roomID, String serverID, String ownerID) {
@@ -22,8 +22,8 @@ public class Chatroom {
     }
 
 
-    public synchronized void addClients(String clientID) {
-        this.clientList.add(clientID);
+    public synchronized void addClients(Client client) {
+        this.clientList.add(client);
     }
 
     public synchronized void removeClients(String clientID) {
@@ -44,7 +44,7 @@ public class Chatroom {
     }
 
 
-    public synchronized ArrayList <String> getClientList() {
+    public synchronized ArrayList <Client> getClientList() {
         return clientList;
     }
 }
