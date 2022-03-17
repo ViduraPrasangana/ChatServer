@@ -8,14 +8,13 @@ import org.kohsuke.args4j.CmdLineParser;
 import java.io.IOException;
 
 public class ChatServer {
-    private static String serverId;
     public static void main(String[] args) {
         ServerArgs serverArgs = new ServerArgs();
         CmdLineParser parser = new CmdLineParser(serverArgs);
 
         try{
             parser.parseArgument(args);
-            serverId = serverArgs.getServerId();
+            String serverId = serverArgs.getServerId();
             Config config = new Config(serverArgs.getServerConf());
             Server server = config.getServers().get(serverId);
 

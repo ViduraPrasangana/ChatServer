@@ -2,7 +2,7 @@ package lk.ac.mrt.cse.cs4262.server;
 
 import com.google.gson.Gson;
 import lk.ac.mrt.cse.cs4262.server.model.request.NewIdentityReq;
-import lk.ac.mrt.cse.cs4262.server.model.response.NewIdentity;
+import lk.ac.mrt.cse.cs4262.server.model.response.NewIdentityRes;
 import lk.ac.mrt.cse.cs4262.server.model.response.RoomChange;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -50,7 +50,7 @@ public class ServerConnectionHandler extends Thread {
                 NewIdentityReq newIdentityReq = gson.fromJson(message.toJSONString(),NewIdentityReq.class);
                 System.out.println(newIdentityReq.getIdentity());
 
-                String response = gson.toJson(new NewIdentity("true"));
+                String response = gson.toJson(new NewIdentityRes("true"));
                 String response2 = gson.toJson(new RoomChange(newIdentityReq.getIdentity(), "","MainHall-s1"));
                 send(response);
                 send(response2);
