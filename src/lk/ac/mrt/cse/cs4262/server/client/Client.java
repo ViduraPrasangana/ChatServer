@@ -5,7 +5,6 @@ import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class Client {
 
@@ -14,6 +13,7 @@ public class Client {
     private final ChatroomHandler chatroomHandler;
     private boolean isOwner;
     private Chatroom chatroom;
+    private ArrayList<String> clientIDList;
 
     public Client (String clientID, Server server){
         this.clientID = clientID;
@@ -28,15 +28,17 @@ public class Client {
 
 
     // #list - ask for the list of chat rooms in the system
-    public List<String> getListofChatrooms(){
+    public ArrayList<String> getListofChatrooms(){
         return chatroomHandler.getChatroomList();
     }
 
     // #who - ask for the list of clients in the current chat room
-//    public List<String> getListofClients(){
-//        return
-//
-//    }
+    public ArrayList<String> getListofClients(){
+        ArrayList <Client> clientList = chatroom.getClientList();
+        clientList.forEach((client -> clientIDList.add(client.getClientID())));
+        return clientIDList;
+
+    }
 
     // #createroom roomid - create a chat room
     // TODO: check sync
