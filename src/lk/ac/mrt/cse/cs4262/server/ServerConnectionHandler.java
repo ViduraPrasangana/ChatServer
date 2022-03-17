@@ -14,14 +14,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
-public class ClientConnectionHandler extends Thread {
+public class ServerConnectionHandler extends Thread {
     private Socket socket;
     private Gson gson;
     private DataOutputStream out;
     private BufferedReader in;
     private JSONParser parser;
 
-    public ClientConnectionHandler(Socket socket) throws IOException {
+    public ServerConnectionHandler(Socket socket) throws IOException {
         this.socket = socket;
         gson = new Gson();
         parser = new JSONParser();
