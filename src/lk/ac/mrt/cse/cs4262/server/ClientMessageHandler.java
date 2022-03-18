@@ -4,12 +4,13 @@ import com.google.gson.Gson;
 import lk.ac.mrt.cse.cs4262.server.chatroom.Chatroom;
 import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
 import lk.ac.mrt.cse.cs4262.server.client.Client;
+import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.model.request.CreateRoomReq;
+import lk.ac.mrt.cse.cs4262.server.model.request.JoinRoomReq;
 import lk.ac.mrt.cse.cs4262.server.model.request.NewIdentityReq;
 import lk.ac.mrt.cse.cs4262.server.model.response.*;
 import org.json.simple.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -101,6 +102,38 @@ public class ClientMessageHandler {
                 }else{
                     connectionHandler.send(gson.toJson(createRoomRes));
                 }
+            }
+
+            case Constant.TYPE_JOINROOM -> {
+                JoinRoomReq joinRoomReq = gson.fromJson(message.toJSONString(),JoinRoomReq.class);
+                Client client = connectionHandler.getClient();
+                //TODO: verify from leader chatroom exists and chatroom id
+                Server serverOfRoom = null;
+                if(connectionHandler.getClient().isOwner() || serverOfRoom == null){
+
+                    RoomChange roomChange = new RoomChange(client.getClientID(), client.getChatroom().getChatroomID(),  client.getChatroom().getChatroomID());
+                    connectionHandler.send(gson.toJson(roomChange));
+
+                }else if(serverOfRoom.getServerId().equals(ChatServer.thisServer.getServerId())){
+                    Chatroom formerRoom = client.getChatroom();
+
+                    chatroomHandler.addClientToChatRoom(client,joinRoomReq.getRoomid());
+                    RoomChange roomChange = new RoomChange(client.getClientID(),formerRoom.getChatroomID(), client.getChatroom().getChatroomID());
+
+                    broadcastToClients(gson.toJson(roomChange), formerRoom.getClientList());
+                    broadcastToClients(gson.toJson(roomChange), client.getChatroom().getClientList());
+                }else {
+                    Chatroom formerRoom = client.getChatroom();
+                    client.getChatroom().removeClient(client.getClientID());
+                    RouteRes routeRes = new RouteRes(joinRoomReq.getRoomid(), serverOfRoom.getAddress(),String.valueOf(serverOfRoom.getClientsPort()));
+                    RoomChange roomChange = new RoomChange(client.getClientID(),formerRoom.getChatroomID(), joinRoomReq.getRoomid());
+                    connectionHandler.send(gson.toJson(routeRes));
+                    broadcastToClients(gson.toJson(roomChange),formerRoom.getClientList());
+                }
+
+            }
+            case Constant.TYPE_MOVEJOIN -> {
+
             }
         }
     }

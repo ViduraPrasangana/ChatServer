@@ -1,10 +1,12 @@
 package lk.ac.mrt.cse.cs4262.server.chatroom;
 
+import lk.ac.mrt.cse.cs4262.server.ChatServer;
 import lk.ac.mrt.cse.cs4262.server.client.Client;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 // singleton class to maintain only one ChatroomHandler for the system
 
@@ -53,16 +55,20 @@ public class ChatroomHandler {
         client.setChatroom(chatroom);
         chatroom.addClient(client);
     }
-
+    public void addClientToChatRoom(Client client,String chatroomId){
+        addClientToChatRoom(client,chatRooms.get(chatroomId));
+    }
     public HashMap<String,Chatroom> getChatroomList() {
         return chatRooms;
     }
 
     public void deleteRoom(String roomID){
+        //TODO: client management should implemented
         synchronized(chatRooms){
             chatRooms.remove(roomID);
         }
     }
+
 
 
     public void changeRoom(Chatroom chatroom) {
