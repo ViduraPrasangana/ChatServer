@@ -40,9 +40,13 @@ public class ClientConnectionHandler extends Thread {
     }
 
 
-    public void send(String res) throws IOException {
-        out.write((res + "\n").getBytes("UTF-8"));
-        out.flush();
+    public void send(String res) {
+        try {
+            out.write((res + "\n").getBytes("UTF-8"));
+            out.flush();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
     public Client getClient() {

@@ -74,13 +74,13 @@ public class Server {
     public void informDeletion(String ClientID, String roomID, Boolean approved){
         //{"type" : "deleteroom", "roomid" : "jokes", "approved" : "true"}
     }
-    public void informCreation(String ClientID, String roomID, Boolean approved){
-        //{"type" : "createroom", "roomid" : "jokes", "approved" : "true"}
-
-    }
-
-    public void informRoomChange(String clientID, String chatroomID, String roomID) {
-        //{"type" : "roomchange", "identity" : "Maria", "former" : "MainHall-s1", "roomid" :
-        //"jokes"}
-    }
+//    public void informCreation(String ClientID, String roomID, Boolean approved){
+//        //{"type" : "createroom", "roomid" : "jokes", "approved" : "true"}
+//
+//    }
+//
+//    public void informRoomChange(String clientID, String chatroomID, String roomID) {
+//        //{"type" : "roomchange", "identity" : "Maria", "former" : "MainHall-s1", "roomid" :
+//        //"jokes"}
+//    }
 }

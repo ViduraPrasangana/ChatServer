@@ -1,5 +1,6 @@
 package lk.ac.mrt.cse.cs4262.server.client;
 
+import lk.ac.mrt.cse.cs4262.server.ClientConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.chatroom.Chatroom;
 import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
@@ -14,6 +15,7 @@ public class Client {
     private boolean isOwner;
     private Chatroom chatroom;
     private ArrayList<String> clientIDList;
+    private ClientConnectionHandler connectionHandler;
 
     public Client (String clientID, Server server){
         this.clientID = clientID;
@@ -21,16 +23,35 @@ public class Client {
         this.chatroomHandler = ChatroomHandler.getInstance();
         this.isOwner = false;
         this.chatroom = this.server.getMainhall();
+    }
 
+    public Client(String clientID, Server server,ClientConnectionHandler connectionHandler) {
+        this(clientID,server);
+        this.connectionHandler = connectionHandler;
+    }
+
+    public ClientConnectionHandler getConnectionHandler() {
+        return connectionHandler;
+    }
+
+    public void setConnectionHandler(ClientConnectionHandler connectionHandler) {
+        this.connectionHandler = connectionHandler;
+    }
+
+    public void setChatroom(Chatroom chatroom) {
+        if(this.chatroom != null){
+            this.chatroom.removeClient(this.clientID);
+        }
+        this.chatroom = chatroom;
     }
 
     // --------------------- main requests --------------------------------
 
 
     // #list - ask for the list of chat rooms in the system
-    public ArrayList<String> getListofChatrooms(){
-        return chatroomHandler.getChatroomList();
-    }
+//    public ArrayList<String> getListofChatrooms(){
+//        return chatroomHandler.getChatroomList();
+//    }
 
     // #who - ask for the list of clients in the current chat room
     public ArrayList<String> getListofClients(){
@@ -42,29 +63,36 @@ public class Client {
 
     // #createroom roomid - create a chat room
     // TODO: check sync
-    public void createRoom(String roomID){
-        // check if the client is already an owner of a chatroom
-        if (!isOwner){
-            Boolean result = chatroomHandler.createRoom(server.getServerId(),roomID,clientID);
-            // When the client successfully creates a room, it automatically joins the room
-            if (result){
-                this.isOwner = true;
-                Chatroom oldroom = this.chatroom;
-                //this.joinRoom(roomID);
-                this.server.informCreation(this.clientID, roomID,true);
-                this.server.informRoomChange(this.clientID, oldroom.getChatroomID(), roomID);
-                this.server.broadcastRoomChangeClients(oldroom.getChatroomID(), roomID, this.clientID, oldroom.getClientList() );
-            }
-            else{
-                this.server.informCreation(this.clientID, roomID,false);
-            }
-        }
-        else{
-            this.server.informCreation(this.clientID, roomID,false);
-        }
+//    public void createRoom(String roomID){
+//        // check if the client is already an owner of a chatroom
+//        if (!isOwner){
+//            Boolean result = chatroomHandler.createRoom(server.getServerId(),roomID,clientID);
+//            // When the client successfully creates a room, it automatically joins the room
+//            if (result){
+//                this.isOwner = true;
+//                Chatroom oldroom = this.chatroom;
+//                //this.joinRoom(roomID);
+//                this.server.informCreation(this.clientID, roomID,true);
+//                this.server.informRoomChange(this.clientID, oldroom.getChatroomID(), roomID);
+//                this.server.broadcastRoomChangeClients(oldroom.getChatroomID(), roomID, this.clientID, oldroom.getClientList() );
+//            }
+//            else{
+//                this.server.informCreation(this.clientID, roomID,false);
+//            }
+//        }
+//        else{
+//            this.server.informCreation(this.clientID, roomID,false);
+//        }
+//
+//    }
 
+    public boolean isOwner() {
+        return isOwner;
     }
 
+    public void setOwner(boolean owner) {
+        isOwner = owner;
+    }
     // #joinroom roomid - join other rooms
 //    public Boolean joinRoom(String roomID){
 //        // TODO: validate roomID

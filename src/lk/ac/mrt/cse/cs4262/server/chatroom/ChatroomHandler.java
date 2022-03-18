@@ -1,8 +1,10 @@
 package lk.ac.mrt.cse.cs4262.server.chatroom;
 
 import lk.ac.mrt.cse.cs4262.server.client.Client;
+import lk.ac.mrt.cse.cs4262.server.model.Server;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 // singleton class to maintain only one ChatroomHandler for the system
 
@@ -11,11 +13,11 @@ public class ChatroomHandler {
     // static self reference to guarantee that chatroomHandler instance is per class
     public static ChatroomHandler chatroomHandler;
 
-    private final ArrayList<String> chatroomList; // <chatroom id>
+    private HashMap<String,Chatroom> chatRooms; // <chatroom id>
 
     //private constructor to ensure that objects cannot be created externally
     private ChatroomHandler(){
-        chatroomList = new ArrayList <>();
+        chatRooms = new HashMap<>();
     }
 
 
@@ -31,27 +33,34 @@ public class ChatroomHandler {
         return chatroomHandler;
     }
 
-    public synchronized Boolean createRoom(String serverID,String chatRoomID, String ownerID) {
+    public synchronized Boolean createRoom(Server server, String chatRoomID, Client client) {
 
         //check if a room exists in the same name
-        if (chatroomList.contains(chatRoomID)){
+        //TODO: leader should check
+        if (chatRooms.containsKey(chatRoomID)){
             return false;
         }
-        else{
-            Chatroom newRoom = new Chatroom(chatRoomID, serverID, ownerID); // create new chatroom
-            chatroomList.add(chatRoomID); // add the new chatroom to the chatroom list
-            return true;
+        Chatroom newRoom = new Chatroom(chatRoomID, server.getServerId(), client.getClientID()); // create new chatroom
+        addClientToChatRoom(client,newRoom); // When the client successfully creates a room, it automatically joins the room
+        chatRooms.put(chatRoomID,newRoom); // add the new chatroom to the chatroom list
+        client.setOwner(true);
+        return true;
+    }
+    public void addClientToChatRoom(Client client,Chatroom chatroom){
+        if(client.getChatroom() !=null){
+            client.getChatroom().removeClient(client.getClientID());
         }
-
+        client.setChatroom(chatroom);
+        chatroom.addClient(client);
     }
 
-    public ArrayList<String> getChatroomList() {
-        return chatroomList;
+    public HashMap<String,Chatroom> getChatroomList() {
+        return chatRooms;
     }
 
     public void deleteRoom(String roomID){
-        synchronized(chatroomList){
-            chatroomList.remove(roomID);
+        synchronized(chatRooms){
+            chatRooms.remove(roomID);
         }
     }
 
