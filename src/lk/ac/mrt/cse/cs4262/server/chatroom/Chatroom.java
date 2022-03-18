@@ -3,6 +3,7 @@ package lk.ac.mrt.cse.cs4262.server.chatroom;
 import lk.ac.mrt.cse.cs4262.server.client.Client;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 public class Chatroom {
@@ -11,7 +12,7 @@ public class Chatroom {
     private final String serverID;
     private final String ownerID; // client id
 
-    private final ArrayList <Client> clientList = new ArrayList <>();
+    private final HashMap<String,Client> clientList;
     //private final ArrayList<String> clientList = new ArrayList <>(); // <client id>
 
     //TODO : check sync keyword
@@ -19,14 +20,15 @@ public class Chatroom {
         this.roomID = roomID;
         this.serverID = serverID;
         this.ownerID = ownerID;
+        clientList = new HashMap<>();
     }
 
 
-    public synchronized void addClients(Client client) {
-        this.clientList.add(client);
+    public synchronized void addClient(Client client) {
+        this.clientList.put(client.getClientID(),client);
     }
 
-    public synchronized void removeClients(String clientID) {
+    public synchronized void removeClient(String clientID) {
         this.clientList.remove(clientID);
     }
 
@@ -45,6 +47,6 @@ public class Chatroom {
 
 
     public synchronized ArrayList <Client> getClientList() {
-        return clientList;
+        return new ArrayList<Client>(clientList.values());
     }
 }

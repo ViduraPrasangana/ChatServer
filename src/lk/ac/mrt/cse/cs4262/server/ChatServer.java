@@ -8,19 +8,21 @@ import org.kohsuke.args4j.CmdLineParser;
 import java.io.IOException;
 
 public class ChatServer {
+    public static String serverId;
+    public static Server thisServer;
     public static void main(String[] args) {
         ServerArgs serverArgs = new ServerArgs();
         CmdLineParser parser = new CmdLineParser(serverArgs);
 
         try{
             parser.parseArgument(args);
-            String serverId = serverArgs.getServerId();
+            serverId = serverArgs.getServerId();
             Config config = new Config(serverArgs.getServerConf());
-            Server server = config.getServers().get(serverId);
+            thisServer = config.getServers().get(serverId);
 
-            ServerSocket serverSocket = new ServerSocket(server.getAddress(),server.getCoordinationPort());
+            ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort());
             serverSocket.start();
-            ClientSocket clientSocket = new ClientSocket(server.getAddress(),server.getClientsPort());
+            ClientSocket clientSocket = new ClientSocket(thisServer.getAddress(),thisServer.getClientsPort());
             clientSocket.start();
         }catch (IOException | CmdLineException e){
             e.printStackTrace();

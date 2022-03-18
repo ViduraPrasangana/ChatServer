@@ -1,9 +1,11 @@
 package lk.ac.mrt.cse.cs4262.server;
 
 import com.google.gson.Gson;
+import lk.ac.mrt.cse.cs4262.server.client.Client;
 import lk.ac.mrt.cse.cs4262.server.model.request.NewIdentityReq;
 import lk.ac.mrt.cse.cs4262.server.model.response.NewIdentityRes;
 import lk.ac.mrt.cse.cs4262.server.model.response.RoomChange;
+import lk.ac.mrt.cse.cs4262.server.model.response.RoomListRes;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
@@ -32,15 +34,16 @@ public class ClientMessageHandler {
                 NewIdentityReq newIdentityReq = gson.fromJson(message.toJSONString(),NewIdentityReq.class);
 
                 /** Identity Validation **/
-                String regex = "[a-zA-Z][a-zA-Z0-9-_]{2,15}";
+                String regex = "[a-zA-Z][a-zA-Z0-9]{2,15}";
                 Pattern p = Pattern.compile(regex);
                 Matcher m = p.matcher(newIdentityReq.getIdentity());
                 NewIdentityRes newIdentityRes;
                 if(m.matches()){
-                    //TODO Cross server search for duplicate identity
+                    //TODO: Cross server search for duplicate identity : Gossiping
 
                     newIdentityRes = new NewIdentityRes("true");
-                    //TODO Inform other servers about new identity
+                    connectionHandler.setClient(new Client(newIdentityReq.getIdentity(),ChatServer.thisServer));
+                    //TODO: Inform other servers about new identity : Gossiping
                 }else{
                     newIdentityRes = new NewIdentityRes("false");
                 }
@@ -48,7 +51,14 @@ public class ClientMessageHandler {
                 connectionHandler.send(response);
 
             }
-            case Constant.TYPE_CREATEROOM -> {
+            case Constant.TYPE_LIST -> {
+                //TODO cross server search for all chat rooms
+
+                RoomListRes roomListRes = new RoomListRes(new String[]{"MainHall-s1", "MainHall-s2", "jokes"});
+
+                connectionHandler.send(gson.toJson(roomListRes));
+            }
+            case Constant.TYPE_WHO -> {
 
             }
         }
