@@ -1,12 +1,11 @@
 package lk.ac.mrt.cse.cs4262.server.chatroom;
 
-import lk.ac.mrt.cse.cs4262.server.ChatServer;
-import lk.ac.mrt.cse.cs4262.server.client.Client;
+import lk.ac.mrt.cse.cs4262.server.model.Chatroom;
+import lk.ac.mrt.cse.cs4262.server.model.Client;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 
 // singleton class to maintain only one ChatroomHandler for the system
 
@@ -15,7 +14,7 @@ public class ChatroomHandler {
     // static self reference to guarantee that chatroomHandler instance is per class
     public static ChatroomHandler chatroomHandler;
 
-    private final HashMap<String,Chatroom> chatRooms; // <chatroom id>
+    private final HashMap<String, Chatroom> chatRooms; // <chatroom id>
 
     //private constructor to ensure that objects cannot be created externally
     private ChatroomHandler(){

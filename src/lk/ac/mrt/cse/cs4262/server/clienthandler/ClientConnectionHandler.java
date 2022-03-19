@@ -1,6 +1,6 @@
-package lk.ac.mrt.cse.cs4262.server;
+package lk.ac.mrt.cse.cs4262.server.clienthandler;
 
-import lk.ac.mrt.cse.cs4262.server.client.Client;
+import lk.ac.mrt.cse.cs4262.server.model.Client;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;

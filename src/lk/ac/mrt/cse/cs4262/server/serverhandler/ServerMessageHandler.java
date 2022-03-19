@@ -1,6 +1,6 @@
-package lk.ac.mrt.cse.cs4262.server;
+package lk.ac.mrt.cse.cs4262.server.serverhandler;
 
-import lk.ac.mrt.cse.cs4262.server.client.Client;
+import lk.ac.mrt.cse.cs4262.server.model.Client;
 
 import java.util.ArrayList;
 

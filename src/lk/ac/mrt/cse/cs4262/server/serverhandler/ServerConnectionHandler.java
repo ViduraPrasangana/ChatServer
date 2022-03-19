@@ -1,6 +1,7 @@
-package lk.ac.mrt.cse.cs4262.server;
+package lk.ac.mrt.cse.cs4262.server.serverhandler;
 
 import com.google.gson.Gson;
+import lk.ac.mrt.cse.cs4262.server.Constant;
 import lk.ac.mrt.cse.cs4262.server.model.request.NewIdentityReq;
 import lk.ac.mrt.cse.cs4262.server.model.response.NewIdentityRes;
 import lk.ac.mrt.cse.cs4262.server.model.response.RoomChange;

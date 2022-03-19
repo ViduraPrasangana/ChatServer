@@ -1,9 +1,12 @@
-package lk.ac.mrt.cse.cs4262.server;
+package lk.ac.mrt.cse.cs4262.server.clienthandler;
 
 import com.google.gson.Gson;
-import lk.ac.mrt.cse.cs4262.server.chatroom.Chatroom;
+import lk.ac.mrt.cse.cs4262.server.ChatServer;
+import lk.ac.mrt.cse.cs4262.server.Constant;
+import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerMessageHandler;
+import lk.ac.mrt.cse.cs4262.server.model.Chatroom;
 import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
-import lk.ac.mrt.cse.cs4262.server.client.Client;
+import lk.ac.mrt.cse.cs4262.server.model.Client;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.model.request.*;
 import lk.ac.mrt.cse.cs4262.server.model.response.*;
@@ -54,7 +57,7 @@ public class ClientMessageHandler {
                     //TODO: Cross server search for duplicate identity : Gossiping
 
                     newIdentityRes = new NewIdentityRes("true");
-                    Client client = new Client(newIdentityReq.getIdentity(),ChatServer.thisServer,connectionHandler);
+                    Client client = new Client(newIdentityReq.getIdentity(), ChatServer.thisServer,connectionHandler);
                     connectionHandler.setClient(client);
                     addClientToServer(client);
                     //TODO: Inform other servers about new identity : Gossiping

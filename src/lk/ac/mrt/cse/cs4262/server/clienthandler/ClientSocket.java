@@ -1,18 +1,19 @@
-package lk.ac.mrt.cse.cs4262.server;
+package lk.ac.mrt.cse.cs4262.server.clienthandler;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
 
-public class ServerSocket extends Thread{
+public class ClientSocket extends Thread{
 
-    private java.net.ServerSocket socket;
+    private ServerSocket socket;
     private boolean run = true;
 
 
-    public ServerSocket(String address, int port) throws IOException {
-        socket = new java.net.ServerSocket();
+    public ClientSocket(String address, int port) throws IOException {
+        socket = new ServerSocket();
         SocketAddress inetSocketAddress = new InetSocketAddress(address,port);
         socket.bind(inetSocketAddress);
     }
@@ -22,7 +23,7 @@ public class ServerSocket extends Thread{
         try {
             while (run) {
                 Socket s = socket.accept();
-                ServerConnectionHandler connectionHandler = new ServerConnectionHandler(s);
+                ClientConnectionHandler connectionHandler = new ClientConnectionHandler(s);
                 connectionHandler.start();
             }
         } catch (IOException e) {

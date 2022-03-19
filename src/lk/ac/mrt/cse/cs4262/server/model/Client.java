@@ -1,9 +1,7 @@
-package lk.ac.mrt.cse.cs4262.server.client;
+package lk.ac.mrt.cse.cs4262.server.model;
 
-import lk.ac.mrt.cse.cs4262.server.ClientConnectionHandler;
-import lk.ac.mrt.cse.cs4262.server.chatroom.Chatroom;
+import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
-import lk.ac.mrt.cse.cs4262.server.model.Server;
 
 import java.util.ArrayList;
 

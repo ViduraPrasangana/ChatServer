@@ -1,6 +1,6 @@
-package lk.ac.mrt.cse.cs4262.server.chatroom;
+package lk.ac.mrt.cse.cs4262.server.model;
 
-import lk.ac.mrt.cse.cs4262.server.client.Client;
+import lk.ac.mrt.cse.cs4262.server.model.Client;
 
 import java.util.ArrayList;
 import java.util.HashMap;

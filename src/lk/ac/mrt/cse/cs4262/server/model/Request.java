@@ -1,10 +1,10 @@
 package lk.ac.mrt.cse.cs4262.server.model;
 
 
-public class Type {
+public class Request {
     private String type;
 
-    public Type(String type) {
+    public Request(String type) {
         this.type = type;
     }
 

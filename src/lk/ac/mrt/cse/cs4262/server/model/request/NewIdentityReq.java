@@ -1,9 +1,9 @@
 package lk.ac.mrt.cse.cs4262.server.model.request;
 
 import lk.ac.mrt.cse.cs4262.server.Constant;
-import lk.ac.mrt.cse.cs4262.server.model.Type;
+import lk.ac.mrt.cse.cs4262.server.model.Request;
 
-public class NewIdentityReq extends Type {
+public class NewIdentityReq extends Request {
     private String identity;
 
     public NewIdentityReq(String identity) {

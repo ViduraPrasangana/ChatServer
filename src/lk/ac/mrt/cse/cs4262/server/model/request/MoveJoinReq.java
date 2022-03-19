@@ -1,9 +1,9 @@
 package lk.ac.mrt.cse.cs4262.server.model.request;
 
 import lk.ac.mrt.cse.cs4262.server.Constant;
-import lk.ac.mrt.cse.cs4262.server.model.Type;
+import lk.ac.mrt.cse.cs4262.server.model.Request;
 
-public class MoveJoinReq extends Type {
+public class MoveJoinReq extends Request {
     private String former;
     private String roomid;
     private String identity;

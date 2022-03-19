@@ -1,9 +1,9 @@
 package lk.ac.mrt.cse.cs4262.server.model.response;
 
 import lk.ac.mrt.cse.cs4262.server.Constant;
-import lk.ac.mrt.cse.cs4262.server.model.Type;
+import lk.ac.mrt.cse.cs4262.server.model.Request;
 
-public class RouteRes extends Type {
+public class RouteRes extends Request {
     private String roomid;
     private String host;
     private String port;
