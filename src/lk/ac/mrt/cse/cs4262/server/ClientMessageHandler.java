@@ -57,7 +57,7 @@ public class ClientMessageHandler {
                     //TODO: Cross server search for duplicate identity : Gossiping
 
                     newIdentityRes = new NewIdentityRes("true");
-                    Client client = new Client(newIdentityReq.getIdentity(),ChatServer.thisServer,connectionHandler)
+                    Client client = new Client(newIdentityReq.getIdentity(),ChatServer.thisServer,connectionHandler);
                     connectionHandler.setClient(client);
                     addClientToServer(client);
                     //TODO: Inform other servers about new identity : Gossiping
@@ -94,7 +94,7 @@ public class ClientMessageHandler {
                 Pattern p = Pattern.compile(regex);
                 Matcher m = p.matcher(createRoomReq.getRoomid());
 
-                CreateRoomRes createRoomRes = new CreateRoomRes(createRoomReq.getRoomid(),false);;
+                CreateRoomRes createRoomRes = new CreateRoomRes(createRoomReq.getRoomid(),false);
                 RoomChange roomChange;
                 if (m.matches() && !client.isOwner()){
                     Chatroom oldRoom = client.getChatroom();
