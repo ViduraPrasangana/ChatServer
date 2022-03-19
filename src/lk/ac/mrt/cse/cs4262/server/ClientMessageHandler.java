@@ -5,10 +5,7 @@ import lk.ac.mrt.cse.cs4262.server.chatroom.Chatroom;
 import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
 import lk.ac.mrt.cse.cs4262.server.client.Client;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
-import lk.ac.mrt.cse.cs4262.server.model.request.CreateRoomReq;
-import lk.ac.mrt.cse.cs4262.server.model.request.JoinRoomReq;
-import lk.ac.mrt.cse.cs4262.server.model.request.MoveJoinReq;
-import lk.ac.mrt.cse.cs4262.server.model.request.NewIdentityReq;
+import lk.ac.mrt.cse.cs4262.server.model.request.*;
 import lk.ac.mrt.cse.cs4262.server.model.response.*;
 import org.json.simple.JSONObject;
 
@@ -144,7 +141,6 @@ public class ClientMessageHandler {
 
             }
             case Constant.TYPE_MOVEJOIN -> {
-                //TODO: should we create client object here ?
                 MoveJoinReq moveJoinReq = gson.fromJson(message.toJSONString(),MoveJoinReq.class);
                 Client client = new Client(moveJoinReq.getIdentity(),ChatServer.thisServer,connectionHandler);
                 connectionHandler.setClient(client);
@@ -153,6 +149,7 @@ public class ClientMessageHandler {
                     chatroomHandler.addClientToChatRoom(connectionHandler.getClient(),moveJoinReq.getRoomid());
                     RoomChange roomChange = new RoomChange(moveJoinReq.getIdentity(), moveJoinReq.getFormer(), moveJoinReq.getRoomid());
                     ServerChange serverChange = new ServerChange(true,ChatServer.thisServer.getServerId());
+
                     broadcastToClients(gson.toJson(roomChange),chatroomHandler.getChatroom(moveJoinReq.getRoomid()).getClientList());
                     connectionHandler.send(gson.toJson(serverChange));
                 }else{
@@ -162,6 +159,28 @@ public class ClientMessageHandler {
 
                     broadcastToClients(gson.toJson(roomChange),newRoom.getClientList());
                 }
+            }
+            case Constant.TYPE_MESSAGE -> {
+                MessageReq messageReq = gson.fromJson(message.toJSONString(),MessageReq.class);
+                MessageRes messageRes = new MessageRes(connectionHandler.getClient().getClientID(),messageReq.getContent());
+
+                broadcastToClients(gson.toJson(messageRes),connectionHandler.getClient().getChatroom().getClientList());
+            }
+            case Constant.TYPE_DELETEROOM -> {
+                DeleteRoomReq deleteRoomReq = gson.fromJson(message.toJSONString(),DeleteRoomReq.class);
+                Client client = connectionHandler.getClient();
+                DeleteRoomRes deleteRoomRes;
+                if(client.getChatroom() != null && client.isOwner()){
+                    //TODO
+
+                    deleteRoomRes = new DeleteRoomRes(deleteRoomReq.getRoomid(), true);
+                }else{
+                    deleteRoomRes = new DeleteRoomRes(deleteRoomReq.getRoomid(), false);
+                }
+                connectionHandler.send(gson.toJson(deleteRoomRes));
+            }
+            case Constant.TYPE_QUIT -> {
+                clientsOnServer.remove(connectionHandler.getClient().getClientID());
             }
         }
     }
