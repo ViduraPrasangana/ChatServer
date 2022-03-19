@@ -7,11 +7,13 @@ import lk.ac.mrt.cse.cs4262.server.client.Client;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.model.request.CreateRoomReq;
 import lk.ac.mrt.cse.cs4262.server.model.request.JoinRoomReq;
+import lk.ac.mrt.cse.cs4262.server.model.request.MoveJoinReq;
 import lk.ac.mrt.cse.cs4262.server.model.request.NewIdentityReq;
 import lk.ac.mrt.cse.cs4262.server.model.response.*;
 import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,11 +22,13 @@ public class ClientMessageHandler {
     private ChatroomHandler chatroomHandler;
     private ServerMessageHandler serverMessageHandler;
     private final Gson gson;
+    private HashMap<String,Client> clientsOnServer;
 
     private ClientMessageHandler(){
         gson = new Gson();
         chatroomHandler = ChatroomHandler.getInstance();
         serverMessageHandler = ServerMessageHandler.getInstance();
+        clientsOnServer = new HashMap<>();
     }
 
     public static synchronized ClientMessageHandler getInstance(){
@@ -32,6 +36,10 @@ public class ClientMessageHandler {
             instance = new ClientMessageHandler();
         }
         return instance;
+    }
+
+    public void addClientToServer(Client client){
+        clientsOnServer.put(client.getClientID(),client);
     }
 
     public void handleMessage(JSONObject message, ClientConnectionHandler connectionHandler) {
@@ -49,7 +57,9 @@ public class ClientMessageHandler {
                     //TODO: Cross server search for duplicate identity : Gossiping
 
                     newIdentityRes = new NewIdentityRes("true");
-                    connectionHandler.setClient(new Client(newIdentityReq.getIdentity(),ChatServer.thisServer,connectionHandler));
+                    Client client = new Client(newIdentityReq.getIdentity(),ChatServer.thisServer,connectionHandler)
+                    connectionHandler.setClient(client);
+                    addClientToServer(client);
                     //TODO: Inform other servers about new identity : Gossiping
                 }else{
                     newIdentityRes = new NewIdentityRes("false");
@@ -129,11 +139,29 @@ public class ClientMessageHandler {
                     RoomChange roomChange = new RoomChange(client.getClientID(),formerRoom.getChatroomID(), joinRoomReq.getRoomid());
                     connectionHandler.send(gson.toJson(routeRes));
                     broadcastToClients(gson.toJson(roomChange),formerRoom.getClientList());
+                    clientsOnServer.remove(client.getClientID());
                 }
 
             }
             case Constant.TYPE_MOVEJOIN -> {
+                //TODO: should we create client object here ?
+                MoveJoinReq moveJoinReq = gson.fromJson(message.toJSONString(),MoveJoinReq.class);
+                Client client = new Client(moveJoinReq.getIdentity(),ChatServer.thisServer,connectionHandler);
+                connectionHandler.setClient(client);
+                if(chatroomHandler.isRoomExists(moveJoinReq.getRoomid())){
+                    addClientToServer(client);
+                    chatroomHandler.addClientToChatRoom(connectionHandler.getClient(),moveJoinReq.getRoomid());
+                    RoomChange roomChange = new RoomChange(moveJoinReq.getIdentity(), moveJoinReq.getFormer(), moveJoinReq.getRoomid());
+                    ServerChange serverChange = new ServerChange(true,ChatServer.thisServer.getServerId());
+                    broadcastToClients(gson.toJson(roomChange),chatroomHandler.getChatroom(moveJoinReq.getRoomid()).getClientList());
+                    connectionHandler.send(gson.toJson(serverChange));
+                }else{
+                    Chatroom newRoom = ChatServer.thisServer.getMainhall();
+                    chatroomHandler.addClientToChatRoom(connectionHandler.getClient(),newRoom);
+                    RoomChange roomChange = new RoomChange(moveJoinReq.getIdentity(), moveJoinReq.getFormer(), newRoom.getChatroomID());
 
+                    broadcastToClients(gson.toJson(roomChange),newRoom.getClientList());
+                }
             }
         }
     }

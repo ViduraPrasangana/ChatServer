@@ -7,9 +7,9 @@ public class ServerChange extends Type {
     private String approved;
     private String serverid;
 
-    public ServerChange(String approved, String serverid) {
+    public ServerChange(boolean approved, String serverid) {
         super(Constant.TYPE_SERVERCHANGE);
-        this.approved = approved;
+        this.approved = Boolean.toString(approved);
         this.serverid = serverid;
     }
 }

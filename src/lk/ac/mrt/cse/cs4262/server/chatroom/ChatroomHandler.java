@@ -15,7 +15,7 @@ public class ChatroomHandler {
     // static self reference to guarantee that chatroomHandler instance is per class
     public static ChatroomHandler chatroomHandler;
 
-    private HashMap<String,Chatroom> chatRooms; // <chatroom id>
+    private final HashMap<String,Chatroom> chatRooms; // <chatroom id>
 
     //private constructor to ensure that objects cannot be created externally
     private ChatroomHandler(){
@@ -60,6 +60,17 @@ public class ChatroomHandler {
     }
     public HashMap<String,Chatroom> getChatroomList() {
         return chatRooms;
+    }
+
+    public void addChatroom(Chatroom chatroom){
+        chatRooms.put(chatroom.getChatroomID(),chatroom);
+    }
+
+    public boolean isRoomExists(String roomId){
+        return chatRooms.containsKey(roomId);
+    }
+    public Chatroom getChatroom(String roomId){
+        return chatRooms.get(roomId);
     }
 
     public void deleteRoom(String roomID){
