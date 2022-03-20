@@ -23,7 +23,7 @@ public class ChatServer {
             serverId = serverArgs.getServerId();
             Config config = new Config(serverArgs.getServerConf());
             thisServer = config.getServers().get(serverId);
-            chatroomHandler.addChatroom(thisServer.getMainhall());
+            chatroomHandler.addChatroom(thisServer.getChatroom());
 
             ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort());
             serverSocket.start();

@@ -1,11 +1,12 @@
 package lk.ac.mrt.cse.cs4262.server.model;
 
+import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomOwnerable;
 import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
 
 import java.util.ArrayList;
 
-public class Client {
+public class Client implements ChatroomOwnerable {
 
     private final String clientID;
     private Server server;
@@ -20,7 +21,7 @@ public class Client {
         this.server = server;
         this.chatroomHandler = ChatroomHandler.getInstance();
         this.isOwner = false;
-        this.chatroom = this.server.getMainhall();
+        this.chatroom = this.server.getChatroom();
     }
 
     public Client(String clientID, Server server,ClientConnectionHandler connectionHandler) {
@@ -107,26 +108,26 @@ public class Client {
 //    }
 
    //  #deleteroom roomid - delete the room
-    public void deleteRoom(String roomID){
-        // TODO: validate roomID
-        //check if he/she is the owner
-        if (this.chatroom.getOwnerID().equals(this.clientID)){
-            Chatroom oldroom = this.chatroom;
-            ///1.delete room from the chatroom list
-            chatroomHandler.deleteRoom(roomID);
-            ///2.informs other servers that this room is deleted
-            server.broadcastDeletion(roomID);
-            ///3.move users to mainhall
-            chatroomHandler.changeRoom(oldroom); // here the chatroom is passed bcs the 'if condition' is true
-            ///4. success msg to the client
-            server.informDeletion(this.clientID, roomID,true);
-        }
-        else{
-            this.server.informDeletion(this.clientID, roomID,false);
-        }
-
-
-    }
+//    public void deleteRoom(String roomID){
+//        // TODO: validate roomID
+//        //check if he/she is the owner
+//        if (this.chatroom.getOwnerID().equals(this.clientID)){
+//            Chatroom oldroom = this.chatroom;
+//            ///1.delete room from the chatroom list
+//            chatroomHandler.deleteRoom(roomID);
+//            ///2.informs other servers that this room is deleted
+//            server.broadcastDeletion(roomID);
+//            ///3.move users to mainhall
+//            chatroomHandler.changeRoom(oldroom); // here the chatroom is passed bcs the 'if condition' is true
+//            ///4. success msg to the client
+//            server.informDeletion(this.clientID, roomID,true);
+//        }
+//        else{
+//            this.server.informDeletion(this.clientID, roomID,false);
+//        }
+//
+//
+//    }
 
 
 
@@ -138,7 +139,7 @@ public class Client {
     // ----------  supporting fuctions ---------------------------
 
     public void joinMainhall() {
-        this.chatroom = this.server.getMainhall();
+        this.chatroom = this.server.getChatroom();
     }
 
 

@@ -156,7 +156,7 @@ public class ClientMessageHandler {
                     broadcastToClients(gson.toJson(roomChange),chatroomHandler.getChatroom(moveJoinReq.getRoomid()).getClientList());
                     connectionHandler.send(gson.toJson(serverChange));
                 }else{
-                    Chatroom newRoom = ChatServer.thisServer.getMainhall();
+                    Chatroom newRoom = ChatServer.thisServer.getChatroom();
                     chatroomHandler.addClientToChatRoom(connectionHandler.getClient(),newRoom);
                     RoomChange roomChange = new RoomChange(moveJoinReq.getIdentity(), moveJoinReq.getFormer(), newRoom.getChatroomID());
 
@@ -173,9 +173,14 @@ public class ClientMessageHandler {
                 DeleteRoomReq deleteRoomReq = gson.fromJson(message.toJSONString(),DeleteRoomReq.class);
                 Client client = connectionHandler.getClient();
                 DeleteRoomRes deleteRoomRes;
-                if(client.getChatroom() != null && client.isOwner()){
-                    //TODO
+                Chatroom chatroom = chatroomHandler.getChatroom(deleteRoomReq.getRoomid());
 
+                if(client.getChatroom() != null && client.isOwner() && chatroom.getOwner().getClientID().equals(client.getClientID())){
+                    chatroom.getClientList().forEach(client1 -> {
+                        RoomChange roomChange = new RoomChange(client1.getClientID(),client1.getChatroom().getRoomID(),ChatServer.thisServer.getChatroom().getRoomID());
+                        broadcastToClients(gson.toJson(roomChange),chatroom.getClientList());
+                    });
+                    chatroomHandler.deleteRoom(deleteRoomReq.getRoomid());
                     deleteRoomRes = new DeleteRoomRes(deleteRoomReq.getRoomid(), true);
                 }else{
                     deleteRoomRes = new DeleteRoomRes(deleteRoomReq.getRoomid(), false);

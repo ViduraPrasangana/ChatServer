@@ -1,5 +1,6 @@
 package lk.ac.mrt.cse.cs4262.server.chatroom;
 
+import lk.ac.mrt.cse.cs4262.server.ChatServer;
 import lk.ac.mrt.cse.cs4262.server.model.Chatroom;
 import lk.ac.mrt.cse.cs4262.server.model.Client;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
@@ -41,7 +42,7 @@ public class ChatroomHandler {
         if (chatRooms.containsKey(chatRoomID)){
             return false;
         }
-        Chatroom newRoom = new Chatroom(chatRoomID, server.getServerId(), client.getClientID()); // create new chatroom
+        Chatroom newRoom = new Chatroom(chatRoomID, server, client); // create new chatroom
         addClientToChatRoom(client,newRoom); // When the client successfully creates a room, it automatically joins the room
         chatRooms.put(chatRoomID,newRoom); // add the new chatroom to the chatroom list
         client.setOwner(true);
@@ -73,10 +74,11 @@ public class ChatroomHandler {
     }
 
     public void deleteRoom(String roomID){
-        //TODO: client management should implemented
-        synchronized(chatRooms){
-            chatRooms.remove(roomID);
-        }
+        Chatroom chatroom = getChatroom(roomID);
+        chatroom.getClientList().forEach(client -> {
+            client.setChatroom(ChatServer.thisServer.getChatroom());
+        });
+        chatRooms.remove(roomID);
     }
 
 

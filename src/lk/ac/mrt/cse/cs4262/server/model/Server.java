@@ -1,11 +1,13 @@
 package lk.ac.mrt.cse.cs4262.server.model;
 
 import lk.ac.mrt.cse.cs4262.server.Constant;
+import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomOwnerable;
 
 import java.util.ArrayList;
 
-public class Server {
+public class Server implements ChatroomOwnerable {
     private String serverId;
+    private final String ownerId = "";
     private String address;
     private int clientsPort;
     private int coordinationPort;
@@ -16,7 +18,7 @@ public class Server {
         this.address = address;
         this.clientsPort = clientsPort;
         this.coordinationPort = coordinationPort;
-        this.mainhall = new Chatroom(Constant.MAINHALL_PREFIX+serverId, this.serverId, "");
+        this.mainhall = new Chatroom(Constant.MAINHALL_PREFIX+serverId, this, this);
     }
 
     public String getServerId() {
@@ -51,7 +53,7 @@ public class Server {
         this.coordinationPort = coordinationPort;
     }
 
-    public Chatroom getMainhall() {
+    public Chatroom getChatroom() {
         return mainhall;
     }
 
@@ -71,6 +73,11 @@ public class Server {
 
     public void informDeletion(String ClientID, String roomID, Boolean approved){
         //{"type" : "deleteroom", "roomid" : "jokes", "approved" : "true"}
+    }
+
+    @Override
+    public String getClientID() {
+        return ownerId;
     }
 //    public void informCreation(String ClientID, String roomID, Boolean approved){
 //        //{"type" : "createroom", "roomid" : "jokes", "approved" : "true"}

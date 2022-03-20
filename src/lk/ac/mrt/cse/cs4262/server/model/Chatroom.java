@@ -1,6 +1,6 @@
 package lk.ac.mrt.cse.cs4262.server.model;
 
-import lk.ac.mrt.cse.cs4262.server.model.Client;
+import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomOwnerable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,17 +9,17 @@ import java.util.HashMap;
 public class Chatroom {
 
     private final String roomID;
-    private final String serverID;
-    private final String ownerID; // client id
+    private final Server server;
+    private final ChatroomOwnerable owner; // client id
 
     private final HashMap<String,Client> clientList;
     //private final ArrayList<String> clientList = new ArrayList <>(); // <client id>
 
     //TODO : check sync keyword
-    public Chatroom(String roomID, String serverID, String ownerID) {
+    public Chatroom(String roomID, Server server, ChatroomOwnerable owner) {
         this.roomID = roomID;
-        this.serverID = serverID;
-        this.ownerID = ownerID;
+        this.server = server;
+        this.owner = owner;
         clientList = new HashMap<>();
     }
 
@@ -37,14 +37,17 @@ public class Chatroom {
         return roomID;
     }
 
-    public synchronized String getServerID() {
-        return serverID;
+    public String getRoomID() {
+        return roomID;
     }
 
-    public synchronized String getOwnerID() {
-        return ownerID;
+    public Server getServer() {
+        return server;
     }
 
+    public ChatroomOwnerable getOwner() {
+        return owner;
+    }
 
     public synchronized ArrayList <Client> getClientList() {
         return new ArrayList<Client>(clientList.values());
