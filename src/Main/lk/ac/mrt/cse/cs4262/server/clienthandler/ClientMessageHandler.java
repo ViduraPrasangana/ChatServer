@@ -3,6 +3,7 @@ package lk.ac.mrt.cse.cs4262.server.clienthandler;
 import com.google.gson.Gson;
 import lk.ac.mrt.cse.cs4262.server.ChatServer;
 import lk.ac.mrt.cse.cs4262.server.Constant;
+import lk.ac.mrt.cse.cs4262.server.model.Request;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerMessageHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Chatroom;
 import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
@@ -11,6 +12,8 @@ import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.model.request.*;
 import lk.ac.mrt.cse.cs4262.server.model.response.*;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -188,8 +191,29 @@ public class ClientMessageHandler {
                 connectionHandler.send(gson.toJson(deleteRoomRes));
             }
             case Constant.TYPE_QUIT -> {
+                Client client = connectionHandler.getClient();
+                RoomChange roomChange = new RoomChange(client.getClientID(),client.getChatroom().getRoomID(),"");
+                //TODO: Do we need to broadcast room change to everyone?
+                connectionHandler.send(gson.toJson(roomChange));
+
+                connectionHandler.closeConnection();
+                if(client.isOwner()){
+                    DeleteRoomReq deleteRoomReq = new DeleteRoomReq(client.getChatroom().getRoomID());
+                    manualRequest(deleteRoomReq,connectionHandler);
+                }
                 clientsOnServer.remove(connectionHandler.getClient().getClientID());
             }
+        }
+    }
+
+    public void manualRequest(Request request,ClientConnectionHandler connectionHandler){
+        JSONParser parser = new JSONParser();
+        try {
+            JSONObject jsonObject = (JSONObject) parser.parse(gson.toJson(request));
+            handleMessage(jsonObject,connectionHandler);
+
+        }catch (ParseException e){
+            e.printStackTrace();
         }
     }
 

@@ -2,9 +2,11 @@ package lk.ac.mrt.cse.cs4262.server;
 
 
 import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
+import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientSocket;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerSocket;
+import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -17,7 +19,6 @@ public class ChatServer {
         ServerArgs serverArgs = new ServerArgs();
         CmdLineParser parser = new CmdLineParser(serverArgs);
         ChatroomHandler chatroomHandler = ChatroomHandler.getInstance();;
-
         try{
             parser.parseArgument(args);
             serverId = serverArgs.getServerId();
