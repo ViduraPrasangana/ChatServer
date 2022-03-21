@@ -81,18 +81,4 @@ public class ChatroomHandler {
         chatRooms.remove(roomID);
     }
 
-
-
-    public void changeRoom(Chatroom chatroom) {
-        //get all members of the room
-        ArrayList<Client> clients = chatroom.getClientList();
-        //for each member: join mainhall
-        clients.forEach((client) -> client.joinMainhall());
-        //roomchange msg broadcast to all the clients in the old room + clients in the mainhall (= all the clients currently in the mainhall)
-        clients.forEach((client) -> client.getServer().broadcastRoomChangeClients(chatroom.getChatroomID(),client.getChatroom().getChatroomID(),client.getClientID(),client.getChatroom().getClientList()));
-
-
-
-
-    }
 }
