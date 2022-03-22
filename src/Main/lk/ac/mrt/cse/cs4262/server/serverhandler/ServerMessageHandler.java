@@ -1,6 +1,12 @@
 package lk.ac.mrt.cse.cs4262.server.serverhandler;
 
+import lk.ac.mrt.cse.cs4262.server.Constant;
+import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Client;
+import lk.ac.mrt.cse.cs4262.server.model.request.NewIdentityReq;
+import lk.ac.mrt.cse.cs4262.server.model.response.NewIdentityRes;
+import lk.ac.mrt.cse.cs4262.server.model.response.RoomChange;
+import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
 
@@ -18,28 +24,16 @@ public class ServerMessageHandler {
         return instance;
     }
 
-    public void broadcastDeletion(String roomID) {
-        //TODO: broadcast to all the servers that this room is deleted
-        // {"type" : "deleteroom", "serverid" : "s1", "roomid" : "jokes"}
-    }
+    public void handleMessage(JSONObject message, ServerConnectionHandler connectionHandler) {
+        String type = (String) message.get("type");
 
+        switch (type){
+            case Constant.TYPE_NEWIDENTITY -> {
 
-    public void broadcastRoomChangeClients(String oldroomID, String newroomID, String clientID, ArrayList<Client> tolist) {
-        //TODO: broadcast the  roomchange
-        //{"type" : "roomchange", "identity" : "Maria", "former" : "MainHall-s1", "roomid" :
-        //"jokes"}
-    }
+            }
+            case Constant.TYPE_CREATEROOM -> {
 
-    public void informDeletion(String ClientID, String roomID, Boolean approved){
-        //{"type" : "deleteroom", "roomid" : "jokes", "approved" : "true"}
-    }
-    public void informCreation(String ClientID, String roomID, Boolean approved){
-        //{"type" : "createroom", "roomid" : "jokes", "approved" : "true"}
-
-    }
-
-    public void informRoomChange(String clientID, String chatroomID, String roomID) {
-        //{"type" : "roomchange", "identity" : "Maria", "former" : "MainHall-s1", "roomid" :
-        //"jokes"}
+            }
+        }
     }
 }
