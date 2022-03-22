@@ -28,12 +28,10 @@ public class ServerMessageHandler {
         String type = (String) message.get("type");
 
         switch (type){
-            case Constant.TYPE_NEWIDENTITY -> {
+            case Constant.TYPE_IMUP -> {
 
             }
-            case Constant.TYPE_CREATEROOM -> {
 
-            }
         }
     }
 }

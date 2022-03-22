@@ -2,6 +2,7 @@ package lk.ac.mrt.cse.cs4262.server.serverhandler;
 
 import com.google.gson.Gson;
 import lk.ac.mrt.cse.cs4262.server.Constant;
+import lk.ac.mrt.cse.cs4262.server.FastBullyService;
 import lk.ac.mrt.cse.cs4262.server.model.request.NewIdentityReq;
 import lk.ac.mrt.cse.cs4262.server.model.response.NewIdentityRes;
 import lk.ac.mrt.cse.cs4262.server.model.response.RoomChange;
@@ -22,9 +23,11 @@ public class ServerConnectionHandler extends Thread {
     private BufferedReader in;
     private JSONParser parser;
     private ServerMessageHandler messageHandler;
+    private FastBullyService fastBullyService;
 
-    public ServerConnectionHandler(Socket socket) throws IOException {
+    public ServerConnectionHandler(Socket socket, FastBullyService fastBullyService) throws IOException {
         this.socket = socket;
+        this.fastBullyService = fastBullyService;
         gson = new Gson();
         parser = new JSONParser();
         in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
@@ -45,14 +48,10 @@ public class ServerConnectionHandler extends Thread {
     }
 
 
-    public void send(String res) {
+    public void send(String res) throws IOException {
         if(socket.isClosed() || socket.isOutputShutdown()) return;
-        try {
-            out.write((res + "\n").getBytes("UTF-8"));
-            out.flush();
-        }catch (IOException e){
-            e.printStackTrace();
-        }
+        out.write((res + "\n").getBytes("UTF-8"));
+        out.flush();
     }
 
     public void closeConnection(){

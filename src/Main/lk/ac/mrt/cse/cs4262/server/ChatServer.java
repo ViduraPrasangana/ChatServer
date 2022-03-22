@@ -26,10 +26,15 @@ public class ChatServer {
             thisServer = config.getServers().get(serverId);
             chatroomHandler.addChatroom(thisServer.getChatroom());
 
-            ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort());
+            FastBullyService fastBullyService = new FastBullyService(config.getServers());
+//            fastBullyService.imUp();
+
+            ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort(),fastBullyService);
             serverSocket.start();
             ClientSocket clientSocket = new ClientSocket(thisServer.getAddress(),thisServer.getClientsPort());
             clientSocket.start();
+
+
         }catch (IOException | CmdLineException e){
             e.printStackTrace();
         }

@@ -1,5 +1,8 @@
 package lk.ac.mrt.cse.cs4262.server.serverhandler;
 
+import lk.ac.mrt.cse.cs4262.server.FastBullyService;
+import lk.ac.mrt.cse.cs4262.server.model.Server;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -9,10 +12,12 @@ public class ServerSocket extends Thread{
 
     private java.net.ServerSocket socket;
     private boolean run = true;
+    private FastBullyService fastBullyService;
 
 
-    public ServerSocket(String address, int port) throws IOException {
+    public ServerSocket(String address, int port, FastBullyService fastBullyService) throws IOException {
         socket = new java.net.ServerSocket();
+        this.fastBullyService =  fastBullyService;
         SocketAddress inetSocketAddress = new InetSocketAddress(address,port);
         socket.bind(inetSocketAddress);
     }
@@ -22,7 +27,15 @@ public class ServerSocket extends Thread{
         try {
             while (run) {
                 Socket s = socket.accept();
-                ServerConnectionHandler connectionHandler = new ServerConnectionHandler(s);
+                //TODO: Check both hostname and host address
+                Server server = fastBullyService.isConnected(s.getInetAddress().getHostAddress(),s.getPort());
+                ServerConnectionHandler connectionHandler;
+                if(server != null){
+                    connectionHandler = server.getConnectionHandler();
+                }else{
+                    connectionHandler = new ServerConnectionHandler(s,fastBullyService);
+                    fastBullyService.addConnection(s,connectionHandler);
+                }
                 connectionHandler.start();
             }
         } catch (IOException e) {

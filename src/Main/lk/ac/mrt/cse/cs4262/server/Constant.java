@@ -16,5 +16,12 @@ public class Constant {
     public static final String TYPE_MESSAGE = "message";
     public static final String TYPE_QUIT = "quit";
 
+    public static final String TYPE_IMUP = "imup";
+    public static final String TYPE_ELECTION = "election";
+    public static final String TYPE_ELECTIONANSWER = "electionanswer";
+    public static final String TYPE_NOMINATION = "nomination";
+    public static final String TYPE_COORDINATOR = "coordination";
+    public static final String TYPE_VIEW = "view";
+
     public static final String MAINHALL_PREFIX = "MainHall-";
 }
