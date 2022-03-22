@@ -21,6 +21,7 @@ public class ServerConnectionHandler extends Thread {
     private DataOutputStream out;
     private BufferedReader in;
     private JSONParser parser;
+    private ServerMessageHandler messageHandler;
 
     public ServerConnectionHandler(Socket socket) throws IOException {
         this.socket = socket;
@@ -28,6 +29,7 @@ public class ServerConnectionHandler extends Thread {
         parser = new JSONParser();
         in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
         out = new DataOutputStream(socket.getOutputStream());
+        messageHandler = ServerMessageHandler.getInstance();
     }
 
     @Override
@@ -35,36 +37,29 @@ public class ServerConnectionHandler extends Thread {
         while (true){
             try {
                 JSONObject message = (JSONObject) parser.parse(in.readLine());
-                ReadRequest (socket, message);
+                messageHandler.handleMessage(message, this);
             } catch (IOException | ParseException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    private void ReadRequest(Socket socket, JSONObject message) throws IOException {
-        String type = (String) message.get("type");
-        System.out.println("socket "+socket.toString());
-        System.out.println(Constant.TYPE_NEWIDENTITY);
-        switch (type){
-            case Constant.TYPE_NEWIDENTITY -> {
-                NewIdentityReq newIdentityReq = gson.fromJson(message.toJSONString(),NewIdentityReq.class);
-                System.out.println(newIdentityReq.getIdentity());
 
-                String response = gson.toJson(new NewIdentityRes("true"));
-                String response2 = gson.toJson(new RoomChange(newIdentityReq.getIdentity(), "","MainHall-s1"));
-                send(response);
-                send(response2);
-
-            }
-            case Constant.TYPE_CREATEROOM -> {
-
-            }
+    public void send(String res) {
+        if(socket.isClosed() || socket.isOutputShutdown()) return;
+        try {
+            out.write((res + "\n").getBytes("UTF-8"));
+            out.flush();
+        }catch (IOException e){
+            e.printStackTrace();
         }
-
     }
-    public void send(String res) throws IOException {
-        out.write((res + "\n").getBytes("UTF-8"));
-        out.flush();
+
+    public void closeConnection(){
+        try {
+            socket.close();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
     }
 }
