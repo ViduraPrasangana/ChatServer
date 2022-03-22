@@ -5,6 +5,7 @@ import lk.ac.mrt.cse.cs4262.server.model.Server;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,8 +27,7 @@ public class Config {
                 servers.put(row[0],server);
             }
             configScanner.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("Configuration file not found");
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

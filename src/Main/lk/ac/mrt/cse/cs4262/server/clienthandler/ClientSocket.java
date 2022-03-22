@@ -23,6 +23,7 @@ public class ClientSocket extends Thread{
         try {
             while (run) {
                 Socket s = socket.accept();
+                System.out.println(s.getPort());
                 ClientConnectionHandler connectionHandler = new ClientConnectionHandler(s);
                 connectionHandler.start();
             }

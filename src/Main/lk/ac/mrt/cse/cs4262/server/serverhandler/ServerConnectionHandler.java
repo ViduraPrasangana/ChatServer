@@ -45,14 +45,10 @@ public class ServerConnectionHandler extends Thread {
     }
 
 
-    public void send(String res) {
+    public void send(String res) throws IOException {
         if(socket.isClosed() || socket.isOutputShutdown()) return;
-        try {
-            out.write((res + "\n").getBytes("UTF-8"));
-            out.flush();
-        }catch (IOException e){
-            e.printStackTrace();
-        }
+        out.write((res + "\n").getBytes("UTF-8"));
+        out.flush();
     }
 
     public void closeConnection(){
