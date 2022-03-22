@@ -40,7 +40,7 @@ public class FastBullyService {
             if(connectionHandler == null){
                 try {
                     Socket socket = new Socket(server.getAddress(),server.getCoordinationPort());
-                    connectionHandler = new ServerConnectionHandler(socket);
+                    connectionHandler = new ServerConnectionHandler(socket,this);
                     server.setSocket(socket);
                     server.setConnectionHandler(connectionHandler);
                     server.setAlive(true);

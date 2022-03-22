@@ -33,7 +33,7 @@ public class ServerSocket extends Thread{
                 if(server != null){
                     connectionHandler = server.getConnectionHandler();
                 }else{
-                    connectionHandler = new ServerConnectionHandler(s);
+                    connectionHandler = new ServerConnectionHandler(s,fastBullyService);
                     fastBullyService.addConnection(s,connectionHandler);
                 }
                 connectionHandler.start();
