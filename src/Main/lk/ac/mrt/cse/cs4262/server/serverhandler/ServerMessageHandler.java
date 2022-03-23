@@ -3,9 +3,11 @@ package lk.ac.mrt.cse.cs4262.server.serverhandler;
 import com.google.gson.Gson;
 import lk.ac.mrt.cse.cs4262.server.ChatServer;
 import lk.ac.mrt.cse.cs4262.server.Constant;
+import lk.ac.mrt.cse.cs4262.server.FastBullyService;
 import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Client;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
+import lk.ac.mrt.cse.cs4262.server.model.request.CoordinatorReq;
 import lk.ac.mrt.cse.cs4262.server.model.request.ImUpReq;
 import lk.ac.mrt.cse.cs4262.server.model.request.NewIdentityReq;
 import lk.ac.mrt.cse.cs4262.server.model.request.ViewReq;
@@ -56,6 +58,10 @@ public class ServerMessageHandler {
                 for (String serverId:viewReq.getActiveServers()) {
                     ChatServer.servers.get(serverId).setAlive(true);
                 }
+            }
+            case Constant.TYPE_COORDINATOR -> {
+                CoordinatorReq leader = gson.fromJson(message.toJSONString(),CoordinatorReq.class);
+                FastBullyService.leader = leader.getServerId();
             }
 
         }

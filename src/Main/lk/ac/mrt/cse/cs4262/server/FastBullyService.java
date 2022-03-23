@@ -2,6 +2,7 @@ package lk.ac.mrt.cse.cs4262.server;
 
 import com.google.gson.Gson;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
+import lk.ac.mrt.cse.cs4262.server.model.request.CoordinatorReq;
 import lk.ac.mrt.cse.cs4262.server.model.request.ImUpReq;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerConnectionHandler;
 
@@ -27,6 +28,30 @@ public class FastBullyService {
     public void imUp(){
         ImUpReq imUpReq = new ImUpReq(ChatServer.thisServer.getServerId());
         broadcast(gson.toJson(imUpReq));
+    }
+    public void leaderBreadcast(){
+        for (String serverId: activeServers) {
+            Server server = ChatServer.servers.get(serverId);
+            ServerConnectionHandler connectionHandler = server.getConnectionHandler();
+            try{
+                if(connectionHandler == null){
+                    Socket socket = new Socket(server.getAddress(),server.getCoordinationPort());
+                    connectionHandler = new ServerConnectionHandler(socket,this);
+                    server.setSocket(socket);
+                    server.setConnectionHandler(connectionHandler);
+                    activeServers.add(server.getServerId());
+                    //server.setAlive(true);
+                }
+
+                CoordinatorReq leader = new CoordinatorReq(ChatServer.thisServer.getServerId());
+
+                connectionHandler.send(gson.toJson(leader));
+                connectionHandler.closeConnection();
+            } catch (IOException e) {
+                server.setAlive(false);
+                e.printStackTrace();
+            }
+        }
     }
 
     public Server isConnected(String address, int port){
