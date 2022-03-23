@@ -4,6 +4,7 @@ package lk.ac.mrt.cse.cs4262.server;
 import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
 import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientSocket;
+import lk.ac.mrt.cse.cs4262.server.gossiphandler.GossipHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerSocket;
 import org.apache.log4j.Logger;
@@ -11,6 +12,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 
 public class ChatServer {
     public static String serverId;
@@ -35,7 +37,9 @@ public class ChatServer {
             clientSocket.start();
 
 
-        }catch (IOException | CmdLineException e){
+            GossipHandler gossipHandler = new GossipHandler(serverId, thisServer.getAddress(),thisServer.getClientsPort(),thisServer.getCoordinationPort());
+            gossipHandler.start();
+        }catch (IOException | CmdLineException | InterruptedException e){
             e.printStackTrace();
         }
     }
