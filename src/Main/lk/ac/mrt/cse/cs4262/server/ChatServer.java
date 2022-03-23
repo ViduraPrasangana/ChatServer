@@ -11,14 +11,17 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 public class ChatServer {
     public static String serverId;
     public static Server thisServer;
+    public static HashMap<String, Server> servers;
     public static void main(String[] args) {
         ServerArgs serverArgs = new ServerArgs();
         CmdLineParser parser = new CmdLineParser(serverArgs);
-        ChatroomHandler chatroomHandler = ChatroomHandler.getInstance();;
+        ChatroomHandler chatroomHandler = ChatroomHandler.getInstance();
+        servers = new HashMap<>();
         try{
             parser.parseArgument(args);
             serverId = serverArgs.getServerId();
@@ -27,7 +30,7 @@ public class ChatServer {
             chatroomHandler.addChatroom(thisServer.getChatroom());
 
             FastBullyService fastBullyService = new FastBullyService(config.getServers());
-//            fastBullyService.imUp();
+            fastBullyService.imUp();
 
             ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort(),fastBullyService);
             serverSocket.start();
