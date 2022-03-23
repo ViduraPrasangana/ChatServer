@@ -13,25 +13,27 @@ import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ChatServer {
     public static String serverId;
     public static Server thisServer;
     public static HashMap<String, Server> servers;
+
     public static void main(String[] args) {
         ServerArgs serverArgs = new ServerArgs();
         CmdLineParser parser = new CmdLineParser(serverArgs);
         ChatroomHandler chatroomHandler = ChatroomHandler.getInstance();
-        servers = new HashMap<>();
         try{
             parser.parseArgument(args);
             serverId = serverArgs.getServerId();
             Config config = new Config(serverArgs.getServerConf());
+            servers = config.getServers();
             thisServer = config.getServers().get(serverId);
             chatroomHandler.addChatroom(thisServer.getChatroom());
 
-            FastBullyService fastBullyService = new FastBullyService(config.getServers());
+            FastBullyService fastBullyService = new FastBullyService();
             fastBullyService.imUp();
 
             ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort(),fastBullyService);
@@ -40,9 +42,12 @@ public class ChatServer {
             clientSocket.start();
 
 
-            GossipHandler gossipHandler = new GossipHandler(serverId, thisServer.getAddress(),thisServer.getClientsPort(),thisServer.getCoordinationPort());
-            gossipHandler.start();
-        }catch (IOException | CmdLineException | InterruptedException e){
+//            GossipHandler gossipHandler = new GossipHandler(serverId, thisServer.getAddress(),thisServer.getClientsPort(),thisServer.getCoordinationPort());
+//            gossipHandler.start();
+//        }catch (IOException | CmdLineException | InterruptedException e){
+//            e.printStackTrace();
+//        }
+        }catch (IOException | CmdLineException e){
             e.printStackTrace();
         }
     }

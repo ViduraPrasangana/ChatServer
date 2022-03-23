@@ -6,16 +6,20 @@ import lk.ac.mrt.cse.cs4262.server.model.request.ImUpReq;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerConnectionHandler;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class FastBullyService {
     private HashMap<String, Server> servers;
     private final Gson gson;
+    public static String leader;
+    ArrayList<String> activeServers;
 
-    public FastBullyService(HashMap<String,Server> servers){
-        this.servers = servers;
+    public FastBullyService(){
+        this.servers = ChatServer.servers;
         gson = new Gson();
 
     }
@@ -35,30 +39,30 @@ public class FastBullyService {
     }
 
     public void broadcast(String message){
+        activeServers = new ArrayList<>();
         servers.forEach((s, server) -> {
-            ServerConnectionHandler connectionHandler = server.getConnectionHandler();
-            if(connectionHandler == null){
-                try {
-                    Socket socket = new Socket(server.getAddress(),server.getCoordinationPort());
-                    connectionHandler = new ServerConnectionHandler(socket,this);
-                    server.setSocket(socket);
-                    server.setConnectionHandler(connectionHandler);
-                    server.setAlive(true);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if(connectionHandler == null){
-                server.setAlive(false);
-            }else{
-                try {
+            if(server.getServerId() != ChatServer.thisServer.getServerId()){
+                ServerConnectionHandler connectionHandler = server.getConnectionHandler();
+                try{
+                    if(connectionHandler == null){
+                        Socket socket = new Socket(server.getAddress(),server.getCoordinationPort());
+                        connectionHandler = new ServerConnectionHandler(socket,this);
+                        server.setSocket(socket);
+                        server.setConnectionHandler(connectionHandler);
+                        activeServers.add(server.getServerId());
+                        //server.setAlive(true);
+                    }
+
+                    // Send Imup Requests
                     connectionHandler.send(message);
+                    connectionHandler.closeConnection();
                 } catch (IOException e) {
                     server.setAlive(false);
                     e.printStackTrace();
                 }
             }
         });
+
     }
 
     public void addConnection(Socket socket, ServerConnectionHandler connectionHandler) {
