@@ -17,6 +17,7 @@ import java.net.UnknownHostException;
 public class ChatServer {
     public static String serverId;
     public static Server thisServer;
+    public static FastBullyService fastBullyService;
     public static void main(String[] args) {
         ServerArgs serverArgs = new ServerArgs();
         CmdLineParser parser = new CmdLineParser(serverArgs);
@@ -26,19 +27,21 @@ public class ChatServer {
             serverId = serverArgs.getServerId();
             Config config = new Config(serverArgs.getServerConf());
             thisServer = config.getServers().get(serverId);
+            config.getServers().remove(serverId);
+            thisServer.setMe(true);
             chatroomHandler.addChatroom(thisServer.getChatroom());
 
-            FastBullyService fastBullyService = new FastBullyService(config.getServers());
+//            fastBullyService = new FastBullyService(config.getServers());
 //            fastBullyService.imUp();
-
-            ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort(),fastBullyService);
+            System.out.println(thisServer.getCoordinationPort());
+            ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort());
             serverSocket.start();
             ClientSocket clientSocket = new ClientSocket(thisServer.getAddress(),thisServer.getClientsPort());
             clientSocket.start();
 
 
-            GossipHandler gossipHandler = new GossipHandler(serverId, thisServer.getAddress(),thisServer.getClientsPort(),thisServer.getCoordinationPort());
-            gossipHandler.start();
+            GossipHandler gossipHandler = new GossipHandler(thisServer,config.getServers());
+//            gossipHandler.start();
         }catch (IOException | CmdLineException | InterruptedException e){
             e.printStackTrace();
         }

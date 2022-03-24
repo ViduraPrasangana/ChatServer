@@ -2,6 +2,7 @@ package lk.ac.mrt.cse.cs4262.server.serverhandler;
 
 import lk.ac.mrt.cse.cs4262.server.Constant;
 import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientConnectionHandler;
+import lk.ac.mrt.cse.cs4262.server.gossiphandler.GossipHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Client;
 import lk.ac.mrt.cse.cs4262.server.model.request.NewIdentityReq;
 import lk.ac.mrt.cse.cs4262.server.model.response.NewIdentityRes;
@@ -11,10 +12,19 @@ import org.json.simple.JSONObject;
 import java.util.ArrayList;
 
 public class ServerMessageHandler {
-    public static ServerMessageHandler instance;
+    private static ServerMessageHandler instance;
+    private GossipHandler gossipHandler;
 
     private ServerMessageHandler(){
 
+    }
+
+    public GossipHandler getGossipHandler() {
+        return gossipHandler;
+    }
+
+    public void setGossipHandler(GossipHandler gossipHandler) {
+        this.gossipHandler = gossipHandler;
     }
 
     public static synchronized ServerMessageHandler getInstance(){

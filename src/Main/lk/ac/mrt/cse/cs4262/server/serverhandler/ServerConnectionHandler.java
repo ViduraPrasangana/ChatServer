@@ -1,6 +1,7 @@
 package lk.ac.mrt.cse.cs4262.server.serverhandler;
 
 import com.google.gson.Gson;
+import lk.ac.mrt.cse.cs4262.server.ChatServer;
 import lk.ac.mrt.cse.cs4262.server.Constant;
 import lk.ac.mrt.cse.cs4262.server.FastBullyService;
 import lk.ac.mrt.cse.cs4262.server.model.request.NewIdentityReq;
@@ -25,9 +26,9 @@ public class ServerConnectionHandler extends Thread {
     private ServerMessageHandler messageHandler;
     private FastBullyService fastBullyService;
 
-    public ServerConnectionHandler(Socket socket, FastBullyService fastBullyService) throws IOException {
+    public ServerConnectionHandler(Socket socket) throws IOException {
         this.socket = socket;
-        this.fastBullyService = fastBullyService;
+        this.fastBullyService = ChatServer.fastBullyService;
         gson = new Gson();
         parser = new JSONParser();
         in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
