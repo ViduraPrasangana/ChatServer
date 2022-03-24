@@ -17,6 +17,7 @@ import org.json.simple.JSONObject;
 
 import javax.swing.text.View;
 import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -46,6 +47,10 @@ public class ServerMessageHandler {
                     ArrayList<String> activeServers = getActiveServers();
                     ViewReq viewReq = new ViewReq(activeServers);
                     String request = gson.toJson(viewReq);
+                    if(connectionHandler.getSocket().isClosed() || connectionHandler.getSocket().isOutputShutdown()){
+                        Socket socket = new Socket(ChatServer.thisServer.getAddress(),ChatServer.thisServer.getCoordinationPort());
+                        connectionHandler = new ServerConnectionHandler(socket,this);
+                    }
                     connectionHandler.send(request);
                     connectionHandler.closeConnection();
                 } catch (IOException e){
