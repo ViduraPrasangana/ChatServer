@@ -34,6 +34,15 @@ public class ServerConnectionHandler extends Thread {
         out = new DataOutputStream(socket.getOutputStream());
         messageHandler = ServerMessageHandler.getInstance();
     }
+    public ServerConnectionHandler(Socket socket) throws IOException {
+        this.socket = socket;
+        gson = new Gson();
+        parser = new JSONParser();
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+        out = new DataOutputStream(socket.getOutputStream());
+        messageHandler = ServerMessageHandler.getInstance();
+    }
+
 
     @Override
     public void run() {
