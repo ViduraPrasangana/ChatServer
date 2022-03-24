@@ -16,9 +16,9 @@ public class ServerSocket extends Thread{
     private FastBullyService fastBullyService;
 
 
-    public ServerSocket(String address, int port) throws IOException {
+    public ServerSocket(String address, int port,FastBullyService fastBullyService) throws IOException {
         socket = new java.net.ServerSocket();
-        this.fastBullyService = ChatServer.fastBullyService;
+        this.fastBullyService = fastBullyService;
         SocketAddress inetSocketAddress = new InetSocketAddress(address,port);
         socket.bind(inetSocketAddress);
     }
