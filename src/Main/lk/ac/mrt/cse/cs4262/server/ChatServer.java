@@ -13,28 +13,32 @@ import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ChatServer {
     public static String serverId;
     public static Server thisServer;
-    public static FastBullyService fastBullyService;
+    public static HashMap<String, Server> servers;
+
     public static void main(String[] args) {
         ServerArgs serverArgs = new ServerArgs();
         CmdLineParser parser = new CmdLineParser(serverArgs);
-        ChatroomHandler chatroomHandler = ChatroomHandler.getInstance();;
+        ChatroomHandler chatroomHandler = ChatroomHandler.getInstance();
         try{
             parser.parseArgument(args);
             serverId = serverArgs.getServerId();
             Config config = new Config(serverArgs.getServerConf());
+            servers = config.getServers();
             thisServer = config.getServers().get(serverId);
             config.getServers().remove(serverId);
             thisServer.setMe(true);
             chatroomHandler.addChatroom(thisServer.getChatroom());
 
-//            fastBullyService = new FastBullyService(config.getServers());
-//            fastBullyService.imUp();
-            System.out.println(thisServer.getCoordinationPort());
-            ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort());
+            FastBullyService fastBullyService = new FastBullyService();
+            fastBullyService.imUp();
+
+            ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort(),fastBullyService);
             serverSocket.start();
             ClientSocket clientSocket = new ClientSocket(thisServer.getAddress(),thisServer.getClientsPort());
             clientSocket.start();
