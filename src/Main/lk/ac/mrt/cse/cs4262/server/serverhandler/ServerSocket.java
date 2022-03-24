@@ -1,5 +1,6 @@
 package lk.ac.mrt.cse.cs4262.server.serverhandler;
 
+import lk.ac.mrt.cse.cs4262.server.ChatServer;
 import lk.ac.mrt.cse.cs4262.server.FastBullyService;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 
@@ -15,9 +16,9 @@ public class ServerSocket extends Thread{
     private FastBullyService fastBullyService;
 
 
-    public ServerSocket(String address, int port, FastBullyService fastBullyService) throws IOException {
+    public ServerSocket(String address, int port,FastBullyService fastBullyService) throws IOException {
         socket = new java.net.ServerSocket();
-        this.fastBullyService =  fastBullyService;
+        this.fastBullyService = fastBullyService;
         SocketAddress inetSocketAddress = new InetSocketAddress(address,port);
         socket.bind(inetSocketAddress);
     }

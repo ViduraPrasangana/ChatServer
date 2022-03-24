@@ -5,6 +5,7 @@ import lk.ac.mrt.cse.cs4262.server.ChatServer;
 import lk.ac.mrt.cse.cs4262.server.Constant;
 import lk.ac.mrt.cse.cs4262.server.FastBullyService;
 import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientConnectionHandler;
+import lk.ac.mrt.cse.cs4262.server.gossiphandler.GossipHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Client;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.model.request.CoordinatorReq;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 public class ServerMessageHandler {
     public static ServerMessageHandler instance;
     private final Gson gson;
+    private GossipHandler gossipHandler;
 
     private ServerMessageHandler(){
         gson = new Gson();
@@ -79,5 +81,9 @@ public class ServerMessageHandler {
             }
         });
         return activeServers;
+    }
+
+    public void setGossipHandler(GossipHandler gossipHandler) {
+        this.gossipHandler = gossipHandler;
     }
 }

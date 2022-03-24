@@ -23,5 +23,13 @@ public class Constant {
     public static final String TYPE_COORDINATOR = "coordination";
     public static final String TYPE_VIEW = "view";
 
+    public static final String TYPE_GOSSIPINGREQ = "gossipingreq";
+    public static final String TYPE_GOSSIPINGRES = "gossipingres";
+
+    public static final String GOSSIPDATA_CLIENTS = "gossipdataclients";
+    public static final String GOSSIPDATA_ROOMS = "gossipdatarooms";
+    public static final String GOSSIPDATA_ADDRESS = "address";
+    public static final String GOSSIPDATA_COORDINATIONPORT = "coordinationport";
+
     public static final String MAINHALL_PREFIX = "MainHall-";
 }

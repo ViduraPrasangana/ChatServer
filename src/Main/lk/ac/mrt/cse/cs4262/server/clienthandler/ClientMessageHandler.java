@@ -29,6 +29,7 @@ public class ClientMessageHandler {
     private final Gson gson;
     private HashMap<String,Client> clientsOnServer;
 
+
     private ClientMessageHandler(){
         gson = new Gson();
         chatroomHandler = ChatroomHandler.getInstance();
@@ -43,6 +44,13 @@ public class ClientMessageHandler {
         return instance;
     }
 
+    public HashMap<String, Client> getClientsOnServer() {
+        return clientsOnServer;
+    }
+
+    public void setClientsOnServer(HashMap<String, Client> clientsOnServer) {
+        this.clientsOnServer = clientsOnServer;
+    }
     public void addClientToServer(Client client){
         clientsOnServer.put(client.getClientID(),client);
     }
