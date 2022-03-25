@@ -1,6 +1,7 @@
 package lk.ac.mrt.cse.cs4262.server.chatroom;
 
 import lk.ac.mrt.cse.cs4262.server.ChatServer;
+import lk.ac.mrt.cse.cs4262.server.gossiphandler.GossipHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Chatroom;
 import lk.ac.mrt.cse.cs4262.server.model.Client;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
@@ -14,6 +15,8 @@ public class ChatroomHandler {
 
     // static self reference to guarantee that chatroomHandler instance is per class
     public static ChatroomHandler chatroomHandler;
+    private GossipHandler gossipHandler;
+
 
     private final HashMap<String, Chatroom> chatRooms; // <chatroom id>
 
@@ -81,4 +84,7 @@ public class ChatroomHandler {
         chatRooms.remove(roomID);
     }
 
+    public void setGossipHandler(GossipHandler gossipHandler) {
+        this.gossipHandler = gossipHandler;
+    }
 }

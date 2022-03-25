@@ -3,6 +3,7 @@ package lk.ac.mrt.cse.cs4262.server.clienthandler;
 import com.google.gson.Gson;
 import lk.ac.mrt.cse.cs4262.server.ChatServer;
 import lk.ac.mrt.cse.cs4262.server.Constant;
+import lk.ac.mrt.cse.cs4262.server.gossiphandler.GossipHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Request;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerMessageHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Chatroom;
@@ -28,6 +29,7 @@ public class ClientMessageHandler {
     private ServerMessageHandler serverMessageHandler;
     private final Gson gson;
     private HashMap<String,Client> clientsOnServer;
+    private GossipHandler gossipHandler;
 
 
     private ClientMessageHandler(){
@@ -48,11 +50,16 @@ public class ClientMessageHandler {
         return clientsOnServer;
     }
 
+    public void setGossipHandler(GossipHandler gossipHandler) {
+        this.gossipHandler = gossipHandler;
+    }
+
     public void setClientsOnServer(HashMap<String, Client> clientsOnServer) {
         this.clientsOnServer = clientsOnServer;
     }
     public void addClientToServer(Client client){
         clientsOnServer.put(client.getClientID(),client);
+        gossipHandler.updateClients();
     }
 
     public void handleMessage(JSONObject message, ClientConnectionHandler connectionHandler) {

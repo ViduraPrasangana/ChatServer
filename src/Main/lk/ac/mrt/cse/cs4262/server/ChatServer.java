@@ -36,7 +36,7 @@ public class ChatServer {
             chatroomHandler.addChatroom(thisServer.getChatroom());
 
             FastBullyService fastBullyService = new FastBullyService();
-            fastBullyService.imUp();
+//            fastBullyService.imUp();
 
             ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort(),fastBullyService);
             serverSocket.start();
@@ -45,7 +45,7 @@ public class ChatServer {
 
 
             GossipHandler gossipHandler = new GossipHandler(thisServer,config.getServers());
-//            gossipHandler.start();
+            gossipHandler.start();
         }catch (IOException | CmdLineException | InterruptedException e){
             e.printStackTrace();
         }
