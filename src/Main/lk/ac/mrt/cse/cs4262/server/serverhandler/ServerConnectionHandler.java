@@ -49,11 +49,20 @@ public class ServerConnectionHandler extends Thread {
     public void run() {
         boolean wait = true;
         while (wait){
+            if(socket.isClosed()){
+                interrupt();
+                break;
+            }
             try {
-                JSONObject message = (JSONObject) parser.parse(in.readLine());
-                messageHandler.handleMessage(message, this);
+                String s = in.readLine();
+                if(s !=null){
+                    JSONObject message = (JSONObject) parser.parse(s);
+                    messageHandler.handleMessage(message, this);
+                }
+
             } catch (IOException | ParseException e) {
                 wait = false;
+                interrupt();
                 e.printStackTrace();
             }
         }

@@ -74,6 +74,7 @@ public class ServerMessageHandler {
                 System.out.println(message.toJSONString());
                 GossipDataRes gossipDataRes = gson.fromJson(message.toJSONString(),GossipDataRes.class);
                 gossipHandler.handleGossipRes(gossipDataRes,connectionHandler);
+                connectionHandler.closeConnection();
             }
 
         }
