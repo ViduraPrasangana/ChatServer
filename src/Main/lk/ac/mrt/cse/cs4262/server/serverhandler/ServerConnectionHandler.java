@@ -15,6 +15,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class ServerConnectionHandler extends Thread {
     private Socket socket;
@@ -46,11 +47,22 @@ public class ServerConnectionHandler extends Thread {
 
     @Override
     public void run() {
-        while (true){
+        boolean wait = true;
+        while (wait){
+            if(socket.isClosed()){
+                interrupt();
+                break;
+            }
             try {
-                JSONObject message = (JSONObject) parser.parse(in.readLine());
-                messageHandler.handleMessage(message, this);
+                String s = in.readLine();
+                if(s !=null){
+                    JSONObject message = (JSONObject) parser.parse(s);
+                    messageHandler.handleMessage(message, this);
+                }
+
             } catch (IOException | ParseException e) {
+                wait = false;
+                interrupt();
                 e.printStackTrace();
                 System.out.println("===================================================");
             }

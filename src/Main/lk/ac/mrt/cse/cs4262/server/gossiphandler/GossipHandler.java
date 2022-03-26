@@ -5,6 +5,7 @@ import lk.ac.mrt.cse.cs4262.server.Connectable;
 import lk.ac.mrt.cse.cs4262.server.Constant;
 import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
 import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientMessageHandler;
+import lk.ac.mrt.cse.cs4262.server.model.Client;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.model.request.GossipDataReq;
 import lk.ac.mrt.cse.cs4262.server.model.response.GossipDataRes;
@@ -36,12 +37,12 @@ public class GossipHandler {
     private ChatroomHandler chatroomHandler;
     private ClientMessageHandler messageHandler;
     private ScheduledThreadPoolExecutor gossipExecutor = new ScheduledThreadPoolExecutor(1);
-    private long gossipIntervalMs = 1000;
+    private long gossipIntervalMs = 10000;
     private ScheduledFuture<?> taskFuture;
     private ServerMessageHandler serverMessageHandler;
     private Random random = new Random();
-    private ServerConnectionHandler connectionHandler;
     private int gossipFanout;
+    int c = 0;
     /**
      * Setup the client's lists, gossiping parameters, and parse the startup config file.
      * @throws SocketException
@@ -52,72 +53,90 @@ public class GossipHandler {
         thisServer = server;
         chatroomHandler = ChatroomHandler.getInstance();
         messageHandler = ClientMessageHandler.getInstance();
+        messageHandler.setGossipHandler(this);
         this.servers = new ArrayList<>(servers.values());
         serverData = new HashMap<>();
         serverMessageHandler = ServerMessageHandler.getInstance();
         serverMessageHandler.setGossipHandler(this);
-        gossipFanout = servers.size() - 1;
+        chatroomHandler.setGossipHandler(this);
+        gossipFanout = servers.size();
 
-        String[] a = new String[chatroomHandler.getChatroomList().size()];
-        String[] chatrooms = chatroomHandler.getChatroomList().keySet().toArray(a);
-        setLocalServerState(Constant.GOSSIPDATA_ROOMS,chatrooms);
+        updateRooms();
 
-        String[] b = new String[messageHandler.getClientsOnServer().size()];
-        String[] clients = messageHandler.getClientsOnServer().keySet().toArray(b);
-        setLocalServerState(Constant.GOSSIPDATA_CLIENTS,clients);
+        updateClients();
         setLocalServerState(Constant.GOSSIPDATA_ADDRESS,server.getAddress());
-        setLocalServerState(Constant.GOSSIPDATA_CLIENTS,server.getCoordinationPort());
+        setLocalServerState(Constant.GOSSIPDATA_COORDINATIONPORT,server.getCoordinationPort());
 
         gson = new Gson();
-
 
         random = new Random();
     }
 
+    public void updateClients(){
+        String[] b = new String[messageHandler.getClientsOnServer().size()];
+        String[] clients = messageHandler.getClientsOnServer().keySet().toArray(b);
+        setLocalServerState(Constant.GOSSIPDATA_CLIENTS,clients);
+    }
+
+    public void updateRooms(){
+        String[] a = new String[chatroomHandler.getChatroomList().size()];
+        String[] chatrooms = chatroomHandler.getChatroomList().keySet().toArray(a);
+        setLocalServerState(Constant.GOSSIPDATA_ROOMS,chatrooms);
+    }
+
     public void start() {
 //        socketServer.start();
-        taskFuture = gossipExecutor.scheduleAtFixedRate(()-> doGossip(),
+        System.out.println("started");
+        taskFuture = gossipExecutor.scheduleAtFixedRate(this::doGossip,
                 gossipIntervalMs,
                 gossipIntervalMs,
                 TimeUnit.MILLISECONDS);
     }
     public void doGossip() {
-//        ArrayList<Server> knownClusterNodes = liveNodes();
-        if (serverData.isEmpty()) {
+//        if (serverData.isEmpty()) {
+            System.out.println("using servers");
             sendGossip(new ArrayList<>(servers), gossipFanout);
-        } else {
-            sendGossip(new ArrayList<>(serverData.values()), gossipFanout);
-        }
+//        } else {
+//            System.out.println("using server data");
+//            sendGossip(new ArrayList<>(serverData.values()), gossipFanout);
+//        }
     }
     private void sendGossip(ArrayList<Connectable> knownClusterNodes, int gossipFanout) {
         if (knownClusterNodes.isEmpty()) {
+            System.out.println("clusters empty");
             return;
         }
-
-        for (int i = 0; i < gossipFanout; i++) {
-            Connectable server = pickRandomNode(knownClusterNodes);
-            sendGossipTo(server);
+        for (int i = 0; i < knownClusterNodes.size(); i++) {
+            System.out.println(knownClusterNodes.size());
+            Connectable server = knownClusterNodes.get(i);
+            if(doSend()){
+                System.out.println("sending to node "+server.getAddress().toString()+" "+String.valueOf(server.getCoordinationPort()));
+                sendGossipTo(server);
+            }
         }
     }
-    private Connectable pickRandomNode(ArrayList<Connectable> knownClusterNodes) {
-        int randomNodeIndex = random.nextInt(knownClusterNodes.size());
-        return knownClusterNodes.get(randomNodeIndex);
+    private boolean doSend() {
+        return random.nextInt(10)<7.5;
     }
     private void sendGossipTo(Connectable server) {
         try {
             Socket socket = new Socket(server.getAddress(),server.getCoordinationPort());
-            connectionHandler = new ServerConnectionHandler(socket);
+            ServerConnectionHandler connectionHandler = new ServerConnectionHandler(socket);
             connectionHandler.start();
             GossipDataReq gossipDataReq = new GossipDataReq(serverData);
+            System.out.println(gson.toJson(gossipDataReq));
             connectionHandler.send(gson.toJson(gossipDataReq));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    private void handleGossipReq(GossipDataReq gossipDataReq){
+    public void handleGossipReq(GossipDataReq gossipDataReq, ServerConnectionHandler connectionHandler){
+        System.out.println("before gossip req");
+        System.out.println(gson.toJson(serverData));
         HashMap<String, ServerState> incomingServerData = gossipDataReq.getServerData();
         merge(incomingServerData);
-
+        System.out.println("after merge req");
+        System.out.println(gson.toJson(serverData));
         HashMap<String, ServerState> diff = delta(this.serverData, incomingServerData);
         GossipDataRes gossipDataRes = new GossipDataRes(diff);
         if(connectionHandler !=null){
@@ -129,9 +148,13 @@ public class GossipHandler {
 
         }
     }
-    private void handleGossipRes(GossipDataReq gossipDataRes){
+    public void handleGossipRes(GossipDataRes gossipDataRes, ServerConnectionHandler connectionHandler){
+        System.out.println("before gossip res");
+        System.out.println(gson.toJson(serverData));
         HashMap<String, ServerState> incomingServerData = gossipDataRes.getServerData();
         merge(incomingServerData);
+        System.out.println("after merge res");
+        System.out.println(gson.toJson(serverData));
     }
     public HashMap<String, ServerState> delta(HashMap<String, ServerState> fromMap, HashMap<String, ServerState> toMap) {
         HashMap<String, ServerState> delta = new HashMap<>();
