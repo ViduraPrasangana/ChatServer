@@ -44,15 +44,17 @@ public class ServerMessageHandler {
         switch (type){
             case Constant.TYPE_IMUP -> {
                 try{
+                    System.out.println("imup: "+message);
                     ImUpReq imUpReq = gson.fromJson(message.toJSONString(),ImUpReq.class);
                     ChatServer.servers.get(imUpReq.getServerId()).setAlive(true);
                     ArrayList<String> activeServers = getActiveServers();
                     ViewReq viewReq = new ViewReq(activeServers);
                     String request = gson.toJson(viewReq);
-                    if(connectionHandler.getSocket().isClosed() || connectionHandler.getSocket().isOutputShutdown()){
-                        Socket socket = new Socket(ChatServer.thisServer.getAddress(),ChatServer.thisServer.getCoordinationPort());
-                        connectionHandler = new ServerConnectionHandler(socket,this);
-                    }
+
+                    // Check whether the socket is closed or not
+                    Socket socket = new Socket(ChatServer.servers.get(imUpReq.getServerId()).getAddress(),ChatServer.servers.get(imUpReq.getServerId()).getCoordinationPort());
+                    connectionHandler = new ServerConnectionHandler(socket);
+
                     connectionHandler.send(request);
                     connectionHandler.closeConnection();
                 } catch (IOException e){

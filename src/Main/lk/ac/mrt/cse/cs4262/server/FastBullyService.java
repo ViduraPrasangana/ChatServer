@@ -83,7 +83,8 @@ public class FastBullyService {
                     connectionHandler.closeConnection();
                 } catch (IOException e) {
                     server.setAlive(false);
-                    e.printStackTrace();
+                    System.out.println("Server "+server.getServerId()+" is not activated.");
+                    //e.printStackTrace();
                 }
             }
         });

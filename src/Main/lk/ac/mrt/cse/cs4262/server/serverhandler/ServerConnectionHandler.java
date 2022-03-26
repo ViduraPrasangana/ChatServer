@@ -52,6 +52,7 @@ public class ServerConnectionHandler extends Thread {
                 messageHandler.handleMessage(message, this);
             } catch (IOException | ParseException e) {
                 e.printStackTrace();
+                System.out.println("===================================================");
             }
         }
     }
@@ -59,8 +60,12 @@ public class ServerConnectionHandler extends Thread {
 
     public void send(String res) throws IOException {
         if(socket.isClosed() || socket.isOutputShutdown()) return;
-        out.write((res + "\n").getBytes("UTF-8"));
-        out.flush();
+        try {
+            out.write((res + "\n").getBytes("UTF-8"));
+            out.flush();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
     public void closeConnection(){
