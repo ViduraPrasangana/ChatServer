@@ -5,6 +5,7 @@ import lk.ac.mrt.cse.cs4262.server.FastBullyService;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -19,7 +20,10 @@ public class ServerSocket extends Thread{
     public ServerSocket(String address, int port,FastBullyService fastBullyService) throws IOException {
         socket = new java.net.ServerSocket();
         this.fastBullyService = fastBullyService;
-        SocketAddress inetSocketAddress = new InetSocketAddress(address,port);
+        InetAddress ip = InetAddress.getLocalHost();
+        String internal_address = ip.getHostAddress();
+        SocketAddress inetSocketAddress = new InetSocketAddress(internal_address,port);
+        System.out.println(address+" "+port);
         socket.bind(inetSocketAddress);
     }
 

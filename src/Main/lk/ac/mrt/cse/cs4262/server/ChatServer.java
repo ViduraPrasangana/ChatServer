@@ -37,22 +37,22 @@ public class ChatServer {
             chatroomHandler.addChatroom(thisServer.getChatroom());
 
             FastBullyService fastBullyService = new FastBullyService();
-            fastBullyService.imUp();
+//            fastBullyService.imUp();
 
             ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort(),fastBullyService);
-            serverSocket.start();
+//            serverSocket.start();
             ClientSocket clientSocket = new ClientSocket(thisServer.getAddress(),thisServer.getClientsPort());
             clientSocket.start();
 
 
-//            GossipHandler gossipHandler = new GossipHandler(thisServer,config.getServers());
-//            gossipHandler.start();
-//        }catch (IOException | CmdLineException | InterruptedException e){
-//            e.printStackTrace();
-//        }
-        }catch (IOException | CmdLineException e){
+            GossipHandler gossipHandler = new GossipHandler(thisServer,config.getServers());
+            gossipHandler.start();
+        }catch (IOException | CmdLineException | InterruptedException e){
             e.printStackTrace();
         }
+//        }catch (IOException | CmdLineException e){
+//            e.printStackTrace();
+//        }
     }
 
 }
