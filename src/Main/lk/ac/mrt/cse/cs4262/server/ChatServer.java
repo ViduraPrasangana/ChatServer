@@ -45,14 +45,14 @@ public class ChatServer {
             clientSocket.start();
 
 
-            GossipHandler gossipHandler = new GossipHandler(thisServer,config.getServers());
-            gossipHandler.start();
-        }catch (IOException | CmdLineException | InterruptedException e){
-            e.printStackTrace();
-        }
-//        }catch (IOException | CmdLineException e){
+//            GossipHandler gossipHandler = new GossipHandler(thisServer,config.getServers());
+//            gossipHandler.start();
+//        }catch (IOException | CmdLineException | InterruptedException e){
 //            e.printStackTrace();
 //        }
+        }catch (IOException | CmdLineException e){
+            e.printStackTrace();
+        }
     }
 
 }

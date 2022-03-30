@@ -86,6 +86,12 @@ public class ServerMessageHandler {
                 }
 
             }
+            case Constant.TYPE_ELECTION -> {
+                ElectionReq electionReq = gson.fromJson(message.toJSONString(),ElectionReq.class);
+                System.out.println("Election, host by :"+electionReq.getServerId());
+
+            }
+
             case Constant.TYPE_COORDINATOR -> {
                 CoordinatorReq leader = gson.fromJson(message.toJSONString(),CoordinatorReq.class);
                 FastBullyService.leader = leader.getServerId();
@@ -118,5 +124,13 @@ public class ServerMessageHandler {
 
     public void setGossipHandler(GossipHandler gossipHandler) {
         this.gossipHandler = gossipHandler;
+    }
+
+    public void printViewMessage(ArrayList<String> activeServers){
+        System.out.print(" View: [");
+        for (String server: activeServers) {
+            System.out.print(" "+ server+" ");
+        }
+        System.out.println(" ]");
     }
 }

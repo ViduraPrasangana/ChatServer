@@ -107,6 +107,9 @@ public class FastBullyService {
     }
 
     public void heldElection(){
+        System.out.println("Leader Election is Happening...");
+        ChatServer.electionStatus = true;
+        HashMap<String, Server> higherPriorityServers = getAllHigherServers(ChatServer.thisServer.getServerId());
 
     }
 
