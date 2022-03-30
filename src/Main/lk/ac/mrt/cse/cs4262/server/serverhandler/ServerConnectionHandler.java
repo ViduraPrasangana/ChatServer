@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.concurrent.*;
+
 
 public class ServerConnectionHandler extends Thread {
     private Socket socket;
@@ -24,17 +26,17 @@ public class ServerConnectionHandler extends Thread {
     private BufferedReader in;
     private JSONParser parser;
     private ServerMessageHandler messageHandler;
-    private FastBullyService fastBullyService;
+    Future handler;
 
-    public ServerConnectionHandler(Socket socket, FastBullyService fastBullyService) throws IOException {
-        this.socket = socket;
-        this.fastBullyService = fastBullyService;
-        gson = new Gson();
-        parser = new JSONParser();
-        in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-        out = new DataOutputStream(socket.getOutputStream());
-        messageHandler = ServerMessageHandler.getInstance();
-    }
+//    public ServerConnectionHandler(Socket socket, FastBullyService fastBullyService) throws IOException {
+//        this.socket = socket;
+//        this.fastBullyService = fastBullyService;
+//        gson = new Gson();
+//        parser = new JSONParser();
+//        in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+//        out = new DataOutputStream(socket.getOutputStream());
+//        messageHandler = ServerMessageHandler.getInstance();
+//    }
     public ServerConnectionHandler(Socket socket) throws IOException {
         this.socket = socket;
         gson = new Gson();

@@ -1,15 +1,26 @@
 package lk.ac.mrt.cse.cs4262.server.model.request;
 import lk.ac.mrt.cse.cs4262.server.Constant;
 import lk.ac.mrt.cse.cs4262.server.model.Request;
+import lk.ac.mrt.cse.cs4262.server.model.View;
+
 import java.util.ArrayList;
 
 public class ViewReq extends Request {
     private String serverId;
+    private ArrayList<View> view;
     ArrayList<String> activeServers;
-    public ViewReq(String serverId, ArrayList<String> activeServers) {
+    public ViewReq(String serverId,  ArrayList<View> view) {
         super(Constant.TYPE_VIEW);
         this.serverId = serverId;
-        this.activeServers = activeServers;
+        this.view = view;
+    }
+
+    public ArrayList<View> getView() {
+        return view;
+    }
+
+    public void setView(ArrayList<View> view) {
+        this.view = view;
     }
 
     public ArrayList<String> getActiveServers() {

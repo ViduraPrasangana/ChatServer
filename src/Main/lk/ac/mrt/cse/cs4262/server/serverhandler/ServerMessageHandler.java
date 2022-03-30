@@ -1,36 +1,30 @@
 package lk.ac.mrt.cse.cs4262.server.serverhandler;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.reflect.TypeToken;
 import lk.ac.mrt.cse.cs4262.server.ChatServer;
 import lk.ac.mrt.cse.cs4262.server.Constant;
 import lk.ac.mrt.cse.cs4262.server.FastBullyService;
-import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.gossiphandler.GossipHandler;
-import lk.ac.mrt.cse.cs4262.server.model.Client;
-import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.model.request.*;
 import lk.ac.mrt.cse.cs4262.server.model.response.GossipDataRes;
-import lk.ac.mrt.cse.cs4262.server.model.response.NewIdentityRes;
-import lk.ac.mrt.cse.cs4262.server.model.response.RoomChange;
 import org.json.simple.JSONObject;
 
-import javax.swing.text.View;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 public class ServerMessageHandler {
     public static ServerMessageHandler instance;
     private final Gson gson;
     private GossipHandler gossipHandler;
+    private FastBullyService fastBullyService;
 
     private ServerMessageHandler(){
         gson = new Gson();
+    }
+
+    public void setFastBullyService(FastBullyService fastBullyService) {
+        this.fastBullyService = fastBullyService;
     }
 
     public static synchronized ServerMessageHandler getInstance(){
@@ -53,7 +47,9 @@ public class ServerMessageHandler {
 
                     // Set Alive the imup server
                     ChatServer.servers.get(imUpReq.getServerId()).setAlive(true);
-                    ViewReq viewReq = new ViewReq(ChatServer.thisServer.getServerId(),activeServers);
+
+
+                    ViewReq viewReq = new ViewReq(ChatServer.thisServer.getServerId(),new ArrayList<>(fastBullyService.getViews().values()));
                     String request = gson.toJson(viewReq);
                     connectionHandler.closeConnection();
                     Socket socket = new Socket(ChatServer.servers.get(imUpReq.getServerId()).getAddress(),ChatServer.servers.get(imUpReq.getServerId()).getCoordinationPort());
@@ -75,26 +71,36 @@ public class ServerMessageHandler {
             case Constant.TYPE_VIEW -> {
                 ViewReq viewReq = gson.fromJson(message.toJSONString(), ViewReq.class);
                 System.out.println("View Message from server "+viewReq.getServerId());
-
-                ArrayList<String> activeServers = viewReq.getActiveServers();
-                if ( activeServers == null || activeServers.size()==0){
-                    System.out.println("No of active servers are 0");
-                }else {
-                    ChatServer.servers.get(viewReq.getServerId()).setAlive(true);
-                    // TODO set all received servers to alive
-
+                if(fastBullyService.waiting_for_view){
+                    fastBullyService.updateView(viewReq.getView());
                 }
+
+//                ArrayList<String> activeServers = viewReq.getActiveServers();
+//                if ( activeServers == null || activeServers.size()==0){
+//                    System.out.println("No of active servers are 0");
+//                }else {
+//                    ChatServer.servers.get(viewReq.getServerId()).setAlive(true);
+//                    // TODO set all received servers to alive
+//
+//                }
 
             }
             case Constant.TYPE_ELECTION -> {
                 ElectionReq electionReq = gson.fromJson(message.toJSONString(),ElectionReq.class);
                 System.out.println("Election, host by :"+electionReq.getServerId());
-
             }
 
             case Constant.TYPE_COORDINATOR -> {
                 CoordinatorReq leader = gson.fromJson(message.toJSONString(),CoordinatorReq.class);
-                FastBullyService.leader = leader.getServerId();
+                if(fastBullyService.waiting_for_coordinator){
+                    FastBullyService.leader = leader.getServerId();
+                }
+            }
+            case Constant.TYPE_ELECTIONANSWER -> {
+                ElectionAnswerReq electionAnswerReq = gson.fromJson(message.toJSONString(),ElectionAnswerReq.class);
+                if(fastBullyService.waiting_for_answer){
+
+                }
             }
             case Constant.TYPE_GOSSIPINGREQ -> {
                 System.out.println("gossip req");

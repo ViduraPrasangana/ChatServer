@@ -6,6 +6,7 @@ import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientSocket;
 import lk.ac.mrt.cse.cs4262.server.gossiphandler.GossipHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
+import lk.ac.mrt.cse.cs4262.server.model.View;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerSocket;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class ChatServer {
     public static String serverId;
@@ -37,6 +39,7 @@ public class ChatServer {
             chatroomHandler.addChatroom(thisServer.getChatroom());
 
             FastBullyService fastBullyService = new FastBullyService();
+            fastBullyService.start();
             fastBullyService.imUp();
 
             ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort(),fastBullyService);
