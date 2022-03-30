@@ -7,17 +7,17 @@ import lk.ac.mrt.cse.cs4262.server.model.request.ImUpReq;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerConnectionHandler;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class FastBullyService {
     private HashMap<String, Server> servers;
     private final Gson gson;
     public static String leader;
-    ArrayList<String> activeServers;
+//    ArrayList<String> activeServers;
 
     public FastBullyService(){
         this.servers = ChatServer.servers;
@@ -27,31 +27,70 @@ public class FastBullyService {
 
     public void imUp(){
         ImUpReq imUpReq = new ImUpReq(ChatServer.thisServer.getServerId());
-        broadcast(gson.toJson(imUpReq));
-    }
-    public void leaderBreadcast(){
-        for (String serverId: activeServers) {
-            Server server = ChatServer.servers.get(serverId);
-            ServerConnectionHandler connectionHandler = server.getConnectionHandler();
-            try{
-                if(connectionHandler == null){
-                    Socket socket = new Socket(server.getAddress(),server.getCoordinationPort());
-                    connectionHandler = new ServerConnectionHandler(socket,this);
-                    server.setSocket(socket);
-                    server.setConnectionHandler(connectionHandler);
-                    activeServers.add(server.getServerId());
-                    //server.setAlive(true);
+        String message = gson.toJson(imUpReq);
+        int total_servers = ChatServer.servers.size();
+        AtomicInteger active_server_count = new AtomicInteger();
+
+        servers.forEach((s, server) -> {
+            if(server.getServerId() != ChatServer.thisServer.getServerId()){
+                ServerConnectionHandler connectionHandler = server.getConnectionHandler();
+                try{
+                    if(connectionHandler == null){
+                        Socket socket = new Socket(server.getAddress(),server.getCoordinationPort());
+                        connectionHandler = new ServerConnectionHandler(socket,this);
+                        server.setSocket(socket);
+                        server.setConnectionHandler(connectionHandler);
+
+                        //server.setAlive(true);
+                    }
+
+                    // Send Imup Requests
+                    connectionHandler.send(message);
+                    active_server_count.set(active_server_count.get() + 1);
+                } catch (IOException e) {
+                    server.setAlive(false);
+                    System.out.println("Server "+server.getServerId()+" is not activated.");
+                    //e.printStackTrace();
                 }
-
-                CoordinatorReq leader = new CoordinatorReq(ChatServer.thisServer.getServerId());
-
-                connectionHandler.send(gson.toJson(leader));
-                connectionHandler.closeConnection();
-            } catch (IOException e) {
-                server.setAlive(false);
-                e.printStackTrace();
             }
+        });
+        if (active_server_count.get() == 0){
+            this.leader = ChatServer.serverId;
+            System.out.println("There are no any servers alive.");
+            System.out.println("I'm the Leader");
         }
+
+        HashMap<String, Server> higherPriorityServers = getAllHigherServers(ChatServer.serverId);
+        HashMap<String, Server> lowerPriorityServers = getAllLowerServers(ChatServer.serverId);
+        if (higherPriorityServers.size() == 0 && lowerPriorityServers.size() !=0){
+            leaderBreadcast(lowerPriorityServers);
+        }
+    }
+
+
+    public void leaderBreadcast(HashMap<String, Server> servers){
+        servers.forEach((s, server) -> {
+            if (server.isAlive()){
+                ServerConnectionHandler connectionHandler = server.getConnectionHandler();
+                try{
+                    if(connectionHandler == null){
+                        Socket socket = new Socket(server.getAddress(),server.getCoordinationPort());
+                        connectionHandler = new ServerConnectionHandler(socket,this);
+                        server.setSocket(socket);
+                        server.setConnectionHandler(connectionHandler);
+                    }
+
+                    CoordinatorReq leader = new CoordinatorReq(ChatServer.thisServer.getServerId());
+
+                    connectionHandler.send(gson.toJson(leader));
+                    connectionHandler.closeConnection();
+                } catch (IOException e) {
+                    server.setAlive(false);
+                    e.printStackTrace();
+                }
+            }
+
+        });
     }
 
     public Server isConnected(String address, int port){
@@ -64,33 +103,47 @@ public class FastBullyService {
     }
 
     public void broadcast(String message){
-        activeServers = new ArrayList<>();
-        servers.forEach((s, server) -> {
-            if(server.getServerId() != ChatServer.thisServer.getServerId()){
-                ServerConnectionHandler connectionHandler = server.getConnectionHandler();
-                try{
-                    if(connectionHandler == null){
-                        Socket socket = new Socket(server.getAddress(),server.getCoordinationPort());
-                        connectionHandler = new ServerConnectionHandler(socket,this);
-                        server.setSocket(socket);
-                        server.setConnectionHandler(connectionHandler);
-                        activeServers.add(server.getServerId());
-                        //server.setAlive(true);
-                    }
-
-                    // Send Imup Requests
-                    connectionHandler.send(message);
-                    connectionHandler.closeConnection();
-                } catch (IOException e) {
-                    server.setAlive(false);
-                    System.out.println("Server "+server.getServerId()+" is not activated.");
-                    //e.printStackTrace();
-                }
-            }
-        });
 
     }
 
+    public void heldElection(){
+
+    }
+
+    public void notifyLeader(){
+        servers.forEach((s, server) -> {
+
+        });
+    }
+
+    public HashMap<String, Server> getAllLowerServers(String serverId){
+        int currentPriority = getPriorityNumber(serverId);
+        HashMap<String, Server> lowerPriorityServers = new HashMap<>();
+        servers.forEach((s, server) -> {
+            int serverPriority = getPriorityNumber(server.getServerId());
+            if (serverPriority < currentPriority){
+                lowerPriorityServers.put(s,server);
+            }
+        });
+        return lowerPriorityServers;
+    }
+
+    public HashMap<String, Server> getAllHigherServers(String serverId){
+        int currentPriority = getPriorityNumber(serverId);
+        HashMap<String, Server> higherPriorityServers = new HashMap<>();
+        servers.forEach((s, server) -> {
+            int serverPriority = getPriorityNumber(server.getServerId());
+            if (serverPriority > currentPriority){
+                higherPriorityServers.put(s,server);
+            }
+        });
+        return higherPriorityServers;
+    }
+
+    public Integer getPriorityNumber(String serverId){
+        String[] characters = serverId.split("s");
+        return Integer.parseInt(characters[1]);
+    }
     public void addConnection(Socket socket, ServerConnectionHandler connectionHandler) {
         servers.forEach((s, server1) -> {
             if(server1.getAddress().equals(socket.getInetAddress().getHostAddress()) && server1.getCoordinationPort() == socket.getPort()) {

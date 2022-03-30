@@ -64,14 +64,15 @@ public class ServerConnectionHandler extends Thread {
                 wait = false;
                 interrupt();
                 e.printStackTrace();
-                System.out.println("===================================================");
             }
         }
     }
 
 
     public void send(String res) throws IOException {
-        if(socket.isClosed() || socket.isOutputShutdown()) return;
+        if(socket.isClosed() || socket.isOutputShutdown()) {
+            return;
+        }
         try {
             out.write((res + "\n").getBytes("UTF-8"));
             out.flush();

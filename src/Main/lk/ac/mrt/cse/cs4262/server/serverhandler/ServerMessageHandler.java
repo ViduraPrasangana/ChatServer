@@ -1,6 +1,9 @@
 package lk.ac.mrt.cse.cs4262.server.serverhandler;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.reflect.TypeToken;
 import lk.ac.mrt.cse.cs4262.server.ChatServer;
 import lk.ac.mrt.cse.cs4262.server.Constant;
 import lk.ac.mrt.cse.cs4262.server.FastBullyService;
@@ -19,6 +22,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class ServerMessageHandler {
     public static ServerMessageHandler instance;
@@ -42,19 +46,27 @@ public class ServerMessageHandler {
         switch (type){
             case Constant.TYPE_IMUP -> {
                 try{
-                    System.out.println("imup: "+message);
                     ImUpReq imUpReq = gson.fromJson(message.toJSONString(),ImUpReq.class);
+                    System.out.println("Server "+imUpReq.getServerId()+" activated.");
                     ChatServer.servers.get(imUpReq.getServerId()).setAlive(true);
                     ArrayList<String> activeServers = getActiveServers();
-                    ViewReq viewReq = new ViewReq(activeServers);
-                    String request = gson.toJson(viewReq);
 
-                    // Check whether the socket is closed or not
+                    // Set Alive the imup server
+                    ChatServer.servers.get(imUpReq.getServerId()).setAlive(true);
+                    ViewReq viewReq = new ViewReq(ChatServer.thisServer.getServerId(),activeServers);
+                    String request = gson.toJson(viewReq);
+                    connectionHandler.closeConnection();
                     Socket socket = new Socket(ChatServer.servers.get(imUpReq.getServerId()).getAddress(),ChatServer.servers.get(imUpReq.getServerId()).getCoordinationPort());
                     connectionHandler = new ServerConnectionHandler(socket);
-
+//                    if (connectionHandler.getSocket().isClosed()){
+//                        Socket socket1 = new Socket(ChatServer.servers.get(imUpReq.getServerId()).getAddress(),ChatServer.servers.get(imUpReq.getServerId()).getCoordinationPort());
+//                        connectionHandler = new ServerConnectionHandler(socket1);
+//                    }else {
                     connectionHandler.send(request);
                     connectionHandler.closeConnection();
+//                    }
+
+                    // connectionHandler.closeConnection();
                 } catch (IOException e){
                     e.printStackTrace();
                 }
@@ -62,9 +74,17 @@ public class ServerMessageHandler {
             }
             case Constant.TYPE_VIEW -> {
                 ViewReq viewReq = gson.fromJson(message.toJSONString(), ViewReq.class);
-                for (String serverId:viewReq.getActiveServers()) {
-                    ChatServer.servers.get(serverId).setAlive(true);
+                System.out.println("View Message from server "+viewReq.getServerId());
+
+                ArrayList<String> activeServers = viewReq.getActiveServers();
+                if ( activeServers == null || activeServers.size()==0){
+                    System.out.println("No of active servers are 0");
+                }else {
+                    ChatServer.servers.get(viewReq.getServerId()).setAlive(true);
+                    // TODO set all received servers to alive
+
                 }
+
             }
             case Constant.TYPE_COORDINATOR -> {
                 CoordinatorReq leader = gson.fromJson(message.toJSONString(),CoordinatorReq.class);

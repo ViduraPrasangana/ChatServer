@@ -20,6 +20,7 @@ public class ChatServer {
     public static String serverId;
     public static Server thisServer;
     public static HashMap<String, Server> servers;
+    public volatile static boolean electionStatus;
 
     public static void main(String[] args) {
         ServerArgs serverArgs = new ServerArgs();
@@ -36,7 +37,7 @@ public class ChatServer {
             chatroomHandler.addChatroom(thisServer.getChatroom());
 
             FastBullyService fastBullyService = new FastBullyService();
-//            fastBullyService.imUp();
+            fastBullyService.imUp();
 
             ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort(),fastBullyService);
             serverSocket.start();
@@ -49,6 +50,9 @@ public class ChatServer {
         }catch (IOException | CmdLineException | InterruptedException e){
             e.printStackTrace();
         }
+//        }catch (IOException | CmdLineException e){
+//            e.printStackTrace();
+//        }
     }
 
 }
