@@ -88,13 +88,28 @@ public class ServerMessageHandler {
             case Constant.TYPE_ELECTION -> {
                 ElectionReq electionReq = gson.fromJson(message.toJSONString(),ElectionReq.class);
                 System.out.println("Election, host by :"+electionReq.getServerId());
+                if(fastBullyService.getPriorityNumber(ChatServer.serverId)
+                                >fastBullyService.getPriorityNumber(electionReq.getServerId())){
+                    fastBullyService.sendAnswer(electionReq.getServerId());
+                }
+            }
+
+            case Constant.TYPE_NOMINATION -> {
+                NominationReq nominationReq = gson.fromJson(message.toJSONString(),NominationReq.class);
+                if(fastBullyService.getPriorityNumber(ChatServer.serverId)
+                        >fastBullyService.getPriorityNumber(nominationReq.getServerId())){
+                    fastBullyService.sendCoordinatorToLower(nominationReq.getServerId());
+                }
             }
 
             case Constant.TYPE_COORDINATOR -> {
                 CoordinatorReq leader = gson.fromJson(message.toJSONString(),CoordinatorReq.class);
-                if(fastBullyService.waiting_for_coordinator){
+                if(fastBullyService.waiting_for_coordinator || fastBullyService.waiting_for_nomination_or_coordinator){
                     FastBullyService.leader = leader.getServerId();
+                    fastBullyService.waiting_for_nomination_or_coordinator = false;
+                    //TODO: cancel election
                 }
+                //TODO: cancel election
             }
             case Constant.TYPE_ELECTIONANSWER -> {
                 ElectionAnswerReq electionAnswerReq = gson.fromJson(message.toJSONString(),ElectionAnswerReq.class);

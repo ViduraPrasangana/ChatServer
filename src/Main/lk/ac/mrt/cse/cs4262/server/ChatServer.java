@@ -38,7 +38,7 @@ public class ChatServer {
 
             FastBullyService fastBullyService = new FastBullyService();
             fastBullyService.start();
-//            fastBullyService.imUp();
+            fastBullyService.imUp();
 
             ServerSocket serverSocket = new ServerSocket(thisServer.getAddress(),thisServer.getCoordinationPort(),fastBullyService);
             serverSocket.start();

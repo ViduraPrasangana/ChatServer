@@ -3,10 +3,7 @@ package lk.ac.mrt.cse.cs4262.server;
 import com.google.gson.Gson;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.model.View;
-import lk.ac.mrt.cse.cs4262.server.model.request.CoordinatorReq;
-import lk.ac.mrt.cse.cs4262.server.model.request.ElectionReq;
-import lk.ac.mrt.cse.cs4262.server.model.request.ImUpReq;
-import lk.ac.mrt.cse.cs4262.server.model.request.NominationReq;
+import lk.ac.mrt.cse.cs4262.server.model.request.*;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerMessageHandler;
 
@@ -35,8 +32,8 @@ public class FastBullyService extends Thread{
     public final int coordinator_wait_time_T3 = 5000;
     public boolean waiting_for_coordinator = false;
     public boolean coordinator_for_nomination = false;
-    public final int T4 = 5000;
-    public final boolean T4_waiting = false;
+    public final int nomination_or_coordinator_wait_time_T4 = 5000;
+    public boolean waiting_for_nomination_or_coordinator = false;
 
 
 //    ArrayList<String> activeServers;
@@ -165,12 +162,9 @@ public class FastBullyService extends Thread{
     public void leaderBreadcast(HashMap<String, Server> servers){
         servers.forEach((s, server) -> {
             if (server.isAlive()){
-                ServerConnectionHandler connectionHandler = server.getConnectionHandler();
                 try{
-                    if(connectionHandler == null){
-                        Socket socket = new Socket(server.getAddress(),server.getCoordinationPort());
-                        connectionHandler = new ServerConnectionHandler(socket);
-                    }
+                    Socket socket = new Socket(server.getAddress(),server.getCoordinationPort());
+                    ServerConnectionHandler connectionHandler = new ServerConnectionHandler(socket);
 
                     CoordinatorReq leader = new CoordinatorReq(ChatServer.thisServer.getServerId());
 
@@ -194,9 +188,7 @@ public class FastBullyService extends Thread{
         return server.get();
     }
 
-    public void broadcast(String message){
 
-    }
 
     public void heldElection(){
         answeredServers = new ArrayList<>();
@@ -233,7 +225,9 @@ public class FastBullyService extends Thread{
                     sleep(answer_wait_time_T2);
                     waiting_for_answer = false;
                     if(answeredServers.isEmpty()){
-
+                        HashMap<String,Server> lowerPriorityServers = getAllLowerServers(ChatServer.serverId);
+                        setLeader(ChatServer.thisServer);
+                        leaderBreadcast(lowerPriorityServers);
                     }else{
                         coordinator_for_nomination = false;
                         while (!coordinator_for_nomination){
@@ -347,4 +341,43 @@ public class FastBullyService extends Thread{
         });
     }
 
+    public void sendAnswer(String serverId) {
+        Server server = servers.get(serverId);
+        try {
+            Socket socket = new Socket(server.getAddress(),server.getCoordinationPort());
+            ServerConnectionHandler connectionHandler = new ServerConnectionHandler(socket);
+
+            ElectionAnswerReq electionAnswerReq = new ElectionAnswerReq(ChatServer.serverId);
+            connectionHandler.send(gson.toJson(electionAnswerReq));
+            connectionHandler.closeConnection();
+
+            waiting_for_nomination_or_coordinator = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Thread t = new Thread(){
+            @Override
+            public void run() {
+                try {
+                    sleep(nomination_or_coordinator_wait_time_T4);
+                    if(waiting_for_nomination_or_coordinator){
+                        waiting_for_nomination_or_coordinator = false;
+                        heldElection();
+                    }else{
+
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        t.start();
+    }
+
+    public void sendCoordinatorToLower(String serverId) {
+        HashMap<String,Server> lowerPriorityServers = getAllLowerServers(serverId);
+        setLeader(ChatServer.thisServer);
+        leaderBreadcast(lowerPriorityServers);
+    }
 }
