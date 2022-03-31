@@ -4,7 +4,6 @@ import java.util.Objects;
 
 public class View {
     private String serverId;
-    private boolean isLeader;
 
     public String getServerId() {
         return serverId;
@@ -14,17 +13,9 @@ public class View {
         this.serverId = serverId;
     }
 
-    public boolean isLeader() {
-        return isLeader;
-    }
-
-    public void setLeader(boolean leader) {
-        isLeader = leader;
-    }
-
     @Override
     public boolean equals(Object obj) {
         View o = (View) obj;
-        return o.isLeader()==isLeader() && Objects.equals(getServerId(), o.getServerId());
+        return  Objects.equals(getServerId(), o.getServerId());
     }
 }

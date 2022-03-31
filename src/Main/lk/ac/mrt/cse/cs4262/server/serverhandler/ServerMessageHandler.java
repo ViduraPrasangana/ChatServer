@@ -7,17 +7,20 @@ import lk.ac.mrt.cse.cs4262.server.FastBullyService;
 import lk.ac.mrt.cse.cs4262.server.gossiphandler.GossipHandler;
 import lk.ac.mrt.cse.cs4262.server.model.request.*;
 import lk.ac.mrt.cse.cs4262.server.model.response.GossipDataRes;
+import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ServerMessageHandler {
     public static ServerMessageHandler instance;
     private final Gson gson;
     private GossipHandler gossipHandler;
     private FastBullyService fastBullyService;
+    private Logger logger =  Logger.getLogger(ServerMessageHandler.class);
 
     private ServerMessageHandler(){
         gson = new Gson();
@@ -34,35 +37,45 @@ public class ServerMessageHandler {
         return instance;
     }
 
-    public void handleMessage(JSONObject message, ServerConnectionHandler connectionHandler) {
+    public synchronized void handleMessage(JSONObject message, ServerConnectionHandler connectionHandler) {
         String type = (String) message.get("type");
 
         switch (type){
+            case Constant.TYPE_ASKCLIENT -> {
+                //TODO
+                if(fastBullyService.waiting_for_ask){
+                    fastBullyService.waiting_for_ask = false;
+
+                }
+            }
+            case Constant.TYPE_ASKROOM -> {
+                //TODO
+                if(fastBullyService.waiting_for_ask){
+                    fastBullyService.waiting_for_ask = false;
+
+                }
+            }
             case Constant.TYPE_IMUP -> {
                 try{
                     ImUpReq imUpReq = gson.fromJson(message.toJSONString(),ImUpReq.class);
-                    System.out.println("Server "+imUpReq.getServerId()+" activated.");
-                    ChatServer.servers.get(imUpReq.getServerId()).setAlive(true);
-                    ArrayList<String> activeServers = getActiveServers();
+                    logger.info("ImUp msg received from %s".formatted(imUpReq.getServerId()));
 
-                    // Set Alive the imup server
-                    ChatServer.servers.get(imUpReq.getServerId()).setAlive(true);
-
-
-                    ViewReq viewReq = new ViewReq(ChatServer.thisServer.getServerId(),new ArrayList<>(fastBullyService.getViews().values()));
+                    ArrayList<String> view = new ArrayList<>(fastBullyService.getView());
+                    view.add(ChatServer.serverId);
+                    ViewReq viewReq = new ViewReq(ChatServer.thisServer.getServerId(),view);
                     String request = gson.toJson(viewReq);
                     connectionHandler.closeConnection();
-                    Socket socket = new Socket(ChatServer.servers.get(imUpReq.getServerId()).getAddress(),ChatServer.servers.get(imUpReq.getServerId()).getCoordinationPort());
-                    connectionHandler = new ServerConnectionHandler(socket);
-//                    if (connectionHandler.getSocket().isClosed()){
-//                        Socket socket1 = new Socket(ChatServer.servers.get(imUpReq.getServerId()).getAddress(),ChatServer.servers.get(imUpReq.getServerId()).getCoordinationPort());
-//                        connectionHandler = new ServerConnectionHandler(socket1);
-//                    }else {
-                    connectionHandler.send(request);
-                    connectionHandler.closeConnection();
-//                    }
 
-                    // connectionHandler.closeConnection();
+                    Socket socket = new Socket(ChatServer.servers.get(imUpReq.getServerId()).getAddress(),ChatServer.servers.get(imUpReq.getServerId()).getCoordinationPort());
+                    ServerConnectionHandler connectionHandler2 = new ServerConnectionHandler(socket);
+
+                    connectionHandler2.send(request);
+                    connectionHandler2.closeConnection();
+                    logger.info("Sent view msg to %s , %s".formatted(imUpReq.getServerId(), List.of(view).toArray()));
+
+                    if(!fastBullyService.getView().contains(imUpReq.getServerId())){
+                        fastBullyService.getView().add(imUpReq.getServerId());
+                    }
                 } catch (IOException e){
                     e.printStackTrace();
                 }
@@ -70,8 +83,9 @@ public class ServerMessageHandler {
             }
             case Constant.TYPE_VIEW -> {
                 ViewReq viewReq = gson.fromJson(message.toJSONString(), ViewReq.class);
-                System.out.println("View Message from server "+viewReq.getServerId());
+//                System.out.println("View Message from server "+viewReq.getServerId());
                 if(fastBullyService.waiting_for_view){
+                    logger.info("View message received from %s".formatted(viewReq.getServerId()));
                     fastBullyService.updateView(viewReq.getView());
                 }
 
@@ -107,6 +121,7 @@ public class ServerMessageHandler {
                 if(fastBullyService.waiting_for_coordinator || fastBullyService.waiting_for_nomination_or_coordinator){
                     FastBullyService.leader = leader.getServerId();
                     fastBullyService.waiting_for_nomination_or_coordinator = false;
+                    fastBullyService.waiting_for_coordinator = false;
                     //TODO: cancel election
                 }
                 //TODO: cancel election
@@ -114,7 +129,7 @@ public class ServerMessageHandler {
             case Constant.TYPE_ELECTIONANSWER -> {
                 ElectionAnswerReq electionAnswerReq = gson.fromJson(message.toJSONString(),ElectionAnswerReq.class);
                 if(fastBullyService.waiting_for_answer){
-
+                    fastBullyService.getAnsweredServers().add(electionAnswerReq.getServerId());
                 }
             }
             case Constant.TYPE_GOSSIPINGREQ -> {

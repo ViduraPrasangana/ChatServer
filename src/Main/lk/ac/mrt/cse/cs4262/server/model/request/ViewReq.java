@@ -7,19 +7,19 @@ import java.util.ArrayList;
 
 public class ViewReq extends Request {
     private String serverId;
-    private ArrayList<View> view;
+    private ArrayList<String> view;
     ArrayList<String> activeServers;
-    public ViewReq(String serverId,  ArrayList<View> view) {
+    public ViewReq(String serverId,  ArrayList<String> view) {
         super(Constant.TYPE_VIEW);
         this.serverId = serverId;
         this.view = view;
     }
 
-    public ArrayList<View> getView() {
+    public ArrayList<String> getView() {
         return view;
     }
 
-    public void setView(ArrayList<View> view) {
+    public void setView(ArrayList<String> view) {
         this.view = view;
     }
 

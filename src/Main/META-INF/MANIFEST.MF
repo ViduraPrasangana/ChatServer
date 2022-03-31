@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Main-Class: lk.ac.mrt.cse.cs4262.server.ChatServer
+Class-Path: gson-2.8.5.jar log4j-1.2-api-2.11.2.jar log4j-api-2.11.2.jar
+  log4j-core-2.11.2.jar args4j-2.33.jar json-simple-1.1.jar
+
