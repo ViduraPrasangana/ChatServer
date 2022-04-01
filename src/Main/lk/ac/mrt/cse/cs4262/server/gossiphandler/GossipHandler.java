@@ -1,31 +1,26 @@
 package lk.ac.mrt.cse.cs4262.server.gossiphandler;
 
 import com.google.gson.Gson;
+import lk.ac.mrt.cse.cs4262.server.ChatServer;
 import lk.ac.mrt.cse.cs4262.server.Connectable;
 import lk.ac.mrt.cse.cs4262.server.Constant;
 import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
 import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientMessageHandler;
-import lk.ac.mrt.cse.cs4262.server.model.Client;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.model.request.GossipDataReq;
 import lk.ac.mrt.cse.cs4262.server.model.response.GossipDataRes;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerMessageHandler;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.management.Notification;
-import javax.management.NotificationListener;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class GossipHandler {
 
@@ -195,4 +190,55 @@ public class GossipHandler {
         return gossipStateVersion++;
     }
 
+    public boolean isInClient(String client){
+        AtomicBoolean isIn = new AtomicBoolean(false);
+        serverData.forEach((s, serverState) -> {
+            String[] clients = (String[]) serverState.getValues().get(Constant.GOSSIPDATA_CLIENTS).getValue();
+            for (String s1 :
+                    clients) {
+                if (s1.equals(client)) {
+                    isIn.set(true);
+                    }
+                }
+        });
+        return isIn.get();
+    }
+
+    public String[] getGlobalChatrooms() {
+        ArrayList<String> chatrooms = new ArrayList<>();
+
+        serverData.forEach((s, serverState) -> {
+            String[] rooms = (String[]) serverState.getValues().get(Constant.GOSSIPDATA_ROOMS).getValue();
+            chatrooms.addAll(List.of(rooms));
+        });
+        return chatrooms.toArray(new String[0]);
+    }
+
+    public boolean isInRoom(String roomid) {
+        AtomicBoolean isIn = new AtomicBoolean(false);
+        serverData.forEach((s, serverState) -> {
+            String[] rooms = (String[]) serverState.getValues().get(Constant.GOSSIPDATA_ROOMS).getValue();
+            for (String r1 :
+                    rooms) {
+                if (r1.equals(roomid)) {
+                    isIn.set(true);
+                }
+            }
+        });
+        return isIn.get();
+    }
+
+    public Server getServerOfRoom(String roomid) {
+        AtomicReference<Server> server = new AtomicReference<>(null);
+        serverData.forEach((s, serverState) -> {
+            String[] rooms = (String[]) serverState.getValues().get(Constant.GOSSIPDATA_ROOMS).getValue();
+            for (String r1 :
+                    rooms) {
+                if (r1.equals(roomid)) {
+                    server.set(ChatServer.servers.get(s));
+                }
+            }
+        });
+        return server.get();
+    }
 }

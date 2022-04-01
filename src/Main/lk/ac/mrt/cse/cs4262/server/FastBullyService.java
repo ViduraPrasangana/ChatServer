@@ -1,13 +1,24 @@
 package lk.ac.mrt.cse.cs4262.server;
 
 import com.google.gson.Gson;
+import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientMessageHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.model.request.*;
+import lk.ac.mrt.cse.cs4262.server.model.response.LeaderAskAllRoomsRes;
+import lk.ac.mrt.cse.cs4262.server.model.response.LeaderAskClientRes;
+import lk.ac.mrt.cse.cs4262.server.model.response.LeaderAskRoomRes;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerMessageHandler;
 import org.apache.log4j.Logger;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,20 +28,21 @@ public class FastBullyService extends Thread{
     private HashMap<String, Server> servers;
     private ArrayList<String> view;
     ServerMessageHandler messageHandler;
+    ClientMessageHandler clientMessageHandler;
     private final Gson gson;
     public static String leader;
 
     public final int ask_wait_time_T1 = 5000;
     public boolean waiting_for_ask = false;
-    public final int view_wait_time_T2 = 5000;
+    public final int view_wait_time_T2 = 10000;
     public boolean waiting_for_view = false;
-    public final int answer_wait_time_T2 = 5000;
+    public final int answer_wait_time_T2 = 10000;
     public boolean waiting_for_answer = false;
     ArrayList<String> answeredServers;
-    public final int coordinator_wait_time_T3 = 5000;
+    public final int coordinator_wait_time_T3 = 15000;
     public boolean waiting_for_coordinator = false;
     public boolean coordinator_for_nomination = false;
-    public final int nomination_or_coordinator_wait_time_T4 = 5000;
+    public final int nomination_or_coordinator_wait_time_T4 = 20000;
     public boolean waiting_for_nomination_or_coordinator = false;
 
     private Logger logger =  Logger.getLogger(FastBullyService.class);
@@ -42,7 +54,9 @@ public class FastBullyService extends Thread{
         this.servers = ChatServer.servers;
         gson = new Gson();
         messageHandler = ServerMessageHandler.getInstance();
+        clientMessageHandler = ClientMessageHandler.getInstance();
         messageHandler.setFastBullyService(this);
+        clientMessageHandler.setFastBullyService(this);
         view = new ArrayList<>();
     }
 
@@ -68,7 +82,7 @@ public class FastBullyService extends Thread{
                     server.setAlive(false);
                     logger.warn("Failed to send ImUp to %s".formatted(s));
 //                    System.out.println("Server "+server.getServerId()+" is not activated.");
-                    //e.printStackTrace();
+//                    e.printStackTrace();
                 }
             }
         });
@@ -122,35 +136,51 @@ public class FastBullyService extends Thread{
         return answeredServers;
     }
 
-    public void askLeader(String request){
+    public Object askLeader(String request){
         Server l = servers.get(leader);
         Socket socket = null;
         try {
-            socket = new Socket(l.getAddress(),l.getCoordinationPort());
-            ServerConnectionHandler connectionHandler = new ServerConnectionHandler(socket);
-
-            connectionHandler.send(request);
-            connectionHandler.closeConnection();
+            socket = new Socket();
+            logger.info("Waiting for leader response T1 time %s".formatted(ask_wait_time_T1));
+            socket.connect(new InetSocketAddress(l.getAddress(),l.getCoordinationPort()),ask_wait_time_T1);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            JSONParser parser = new JSONParser();
             waiting_for_ask = true;
-        } catch (IOException e) {
-            logger.info("Connection to leader %s failed".formatted(leader));
-        }
 
-        Thread t = new Thread(){
-            @Override
-            public void run() {
-                try {
-                    sleep(ask_wait_time_T1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            out.write((request + "\n").getBytes("UTF-8"));
+            out.flush();
+            logger.info("Asking request sent to leader");
+
+            String s = in.readLine();
+            JSONObject message = (JSONObject) parser.parse(s);
+            String type = (String) message.get("type");
+            logger.info("Ask response received from leader");
+
+            socket.close();
+            waiting_for_ask = false;
+            switch (type){
+                case Constant.TYPE_ASKCLIENTRES -> {
+                    LeaderAskClientRes leaderAskClientRes = gson.fromJson(message.toJSONString(),LeaderAskClientRes.class);
+                    return leaderAskClientRes.isIn();
                 }
-                if(waiting_for_ask){
-                    waiting_for_ask = false;
-                    heldElection();
+                case Constant.TYPE_ASKROOMRES -> {
+                    LeaderAskRoomRes leaderAskRoomRes = gson.fromJson(message.toJSONString(),LeaderAskRoomRes.class);
+                    return leaderAskRoomRes.isIn();
+                }
+                case Constant.TYPE_ASKALLROOMRES -> {
+                    LeaderAskAllRoomsRes leaderAskAllRoomsRes = gson.fromJson(message.toJSONString(),LeaderAskAllRoomsRes.class);
+                    return leaderAskAllRoomsRes.getAllrooms();
                 }
             }
-        };
 
+        } catch (IOException e) {
+            logger.info("No response for %s. Starting election".formatted(ask_wait_time_T1));
+            heldElection();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 
     public synchronized void updateView(ArrayList<String> view){
@@ -273,24 +303,31 @@ public class FastBullyService extends Thread{
                             final boolean[] coordinator_for_nomination = {false};
                             while (!coordinator_for_nomination[0]){
                                 Server s = getHighestServer(answeredServers);
-                                Socket socket = new Socket(s.getAddress(),s.getCoordinationPort());
-                                ServerConnectionHandler connectionHandler = new ServerConnectionHandler(socket);
+                                try{
+                                    Socket socket = new Socket(s.getAddress(),s.getCoordinationPort());
+                                    ServerConnectionHandler connectionHandler = new ServerConnectionHandler(socket);
 
-                                NominationReq nominationReq = new NominationReq(ChatServer.serverId);
-                                waiting_for_coordinator = true;
-                                connectionHandler.send(gson.toJson(nominationReq));
-                                connectionHandler.closeConnection();
-                                Thread t2 = new Thread(){
-                                    @Override
-                                    public void run() {
+                                    NominationReq nominationReq = new NominationReq(ChatServer.serverId);
+                                    waiting_for_coordinator = true;
+                                    logger.info("Sending nomination msg to %s".formatted(s.getServerId()));
+                                    connectionHandler.send(gson.toJson(nominationReq));
+                                    connectionHandler.closeConnection();
+                                } catch (IOException e) {
+                                    logger.info("Failed to send nomination msg to %s".formatted(s.getServerId()));
+                                }
+//                                Thread t2 = new Thread(){
+//                                    @Override
+//                                    public void run() {
                                         try {
+                                            logger.info("Waiting for coordinator responses T3 time %s ms".formatted(coordinator_wait_time_T3));
                                             sleep(coordinator_wait_time_T3);
+                                            logger.info("Waiting for coordinator is over");
                                             if(!waiting_for_coordinator){ //TODO their is a issue
 //                                                setLeader(s);
                                                 coordinator_for_nomination[0] = true;
                                             }else{
                                                 logger.info("Coordinator msg didn't received from %s. trying with next one".formatted(s.getServerId()));
-                                                answeredServers.remove(s);
+                                                answeredServers.remove(s.getServerId());
                                                 if(answeredServers.isEmpty()){
                                                     coordinator_for_nomination[0] = true;
                                                     logger.info("Answered server list is over. Restarting election");
@@ -300,13 +337,13 @@ public class FastBullyService extends Thread{
                                         } catch (InterruptedException e) {
                                             e.printStackTrace();
                                         }
-                                    }
-                                };
-                                t2.start();
+//                                    }
+//                                };
+//                                t2.start();
                             }
 
                         }
-                    } catch (InterruptedException | IOException e) {
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
@@ -314,14 +351,8 @@ public class FastBullyService extends Thread{
             t.start();
         }
 
-        answeredServers = null;
+//        answeredServers = null;
 
-    }
-
-    public void notifyLeader(){
-        servers.forEach((s, server) -> {
-
-        });
     }
 
     public HashMap<String, Server> getAllLowerServers(String serverId){
@@ -394,6 +425,8 @@ public class FastBullyService extends Thread{
             Socket socket = new Socket(server.getAddress(),server.getCoordinationPort());
             ServerConnectionHandler connectionHandler = new ServerConnectionHandler(socket);
 
+            logger.info("Sending election answer to %s".formatted(serverId));
+
             ElectionAnswerReq electionAnswerReq = new ElectionAnswerReq(ChatServer.serverId);
             connectionHandler.send(gson.toJson(electionAnswerReq));
             connectionHandler.closeConnection();
@@ -407,6 +440,7 @@ public class FastBullyService extends Thread{
             @Override
             public void run() {
                 try {
+                    logger.info("Waiting fot coordination or nomination msg for T4 time %s".formatted(nomination_or_coordinator_wait_time_T4));
                     sleep(nomination_or_coordinator_wait_time_T4);
                     if(waiting_for_nomination_or_coordinator){
                         waiting_for_nomination_or_coordinator = false;
@@ -423,6 +457,7 @@ public class FastBullyService extends Thread{
     }
 
     public void sendCoordinatorToLower(String serverId) {
+        logger.info("Sending coordinator msg to all lower priority servers");
         HashMap<String,Server> lowerPriorityServers = getAllLowerServers(serverId);
         setLeader(ChatServer.thisServer);
         leaderBreadcast(lowerPriorityServers);

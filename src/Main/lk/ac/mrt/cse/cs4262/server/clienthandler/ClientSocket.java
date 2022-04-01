@@ -15,7 +15,7 @@ public class ClientSocket extends Thread{
 //        System.out.print("My external IP address is: " + address);
         String internal_address = ip.getHostAddress();
 //        System.out.print("My IP address is: " + internal_address);
-        SocketAddress inetSocketAddress = new InetSocketAddress(internal_address,port);
+        SocketAddress inetSocketAddress = new InetSocketAddress(address,port);
         socket.bind(inetSocketAddress);
     }
 

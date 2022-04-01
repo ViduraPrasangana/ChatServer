@@ -7,12 +7,16 @@ import lk.ac.mrt.cse.cs4262.server.FastBullyService;
 import lk.ac.mrt.cse.cs4262.server.gossiphandler.GossipHandler;
 import lk.ac.mrt.cse.cs4262.server.model.request.*;
 import lk.ac.mrt.cse.cs4262.server.model.response.GossipDataRes;
+import lk.ac.mrt.cse.cs4262.server.model.response.LeaderAskAllRoomsRes;
+import lk.ac.mrt.cse.cs4262.server.model.response.LeaderAskClientRes;
+import lk.ac.mrt.cse.cs4262.server.model.response.LeaderAskRoomRes;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ServerMessageHandler {
@@ -42,17 +46,52 @@ public class ServerMessageHandler {
 
         switch (type){
             case Constant.TYPE_ASKCLIENT -> {
-                //TODO
-                if(fastBullyService.waiting_for_ask){
-                    fastBullyService.waiting_for_ask = false;
+                LeaderAskClientReq leaderAskClientReq = gson.fromJson(message.toJSONString(),LeaderAskClientReq.class);
+                logger.info("Ask for 'is client in any server' msg received. client - %s".formatted(leaderAskClientReq.getClientId()));
 
+                boolean isIn = gossipHandler.isInClient(leaderAskClientReq.getClientId());
+                LeaderAskClientRes leaderAskClientRes = new LeaderAskClientRes(isIn);
+
+                logger.info("Client is in one of servers - %s".formatted(isIn));
+
+                try {
+                    logger.info("Sending response to server".formatted(isIn));
+                    connectionHandler.send((gson.toJson(leaderAskClientRes)));
+                    connectionHandler.closeConnection();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            case Constant.TYPE_ASKALLROOMRES -> {
+                LeaderAskAllRoomsReq leaderAskAllRoomsReq = gson.fromJson(message.toJSONString(),LeaderAskAllRoomsReq.class);
+                logger.info("Ask for 'all rooms' msg received.");
+
+                String[] rooms = gossipHandler.getGlobalChatrooms();
+                LeaderAskAllRoomsRes leaderAskAllRoomsRes = new LeaderAskAllRoomsRes(rooms);
+
+                try {
+                    logger.info("Sending response to server");
+                    connectionHandler.send((gson.toJson(leaderAskAllRoomsRes)));
+                    connectionHandler.closeConnection();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
             case Constant.TYPE_ASKROOM -> {
-                //TODO
-                if(fastBullyService.waiting_for_ask){
-                    fastBullyService.waiting_for_ask = false;
+                LeaderAskRoomReq leaderAskRoomReq = gson.fromJson(message.toJSONString(),LeaderAskRoomReq.class);
+                logger.info("Ask for 'is room in any server' msg received. room - %s".formatted(leaderAskRoomReq.getRoomId()));
 
+                boolean isIn = gossipHandler.isInRoom(leaderAskRoomReq.getRoomId());
+                LeaderAskRoomRes leaderAskRoomRes = new LeaderAskRoomRes(isIn);
+
+                logger.info("Room is in one of servers - %s".formatted(isIn));
+
+                try {
+                    logger.info("Sending response to server");
+                    connectionHandler.send((gson.toJson(leaderAskRoomRes)));
+                    connectionHandler.closeConnection();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
             case Constant.TYPE_IMUP -> {
@@ -71,7 +110,7 @@ public class ServerMessageHandler {
 
                     connectionHandler2.send(request);
                     connectionHandler2.closeConnection();
-                    logger.info("Sent view msg to %s , %s".formatted(imUpReq.getServerId(), List.of(view).toArray()));
+                    logger.info("Sent view msg to %s , %s".formatted(imUpReq.getServerId(), Arrays.toString(view.toArray())));
 
                     if(!fastBullyService.getView().contains(imUpReq.getServerId())){
                         fastBullyService.getView().add(imUpReq.getServerId());
@@ -101,7 +140,7 @@ public class ServerMessageHandler {
             }
             case Constant.TYPE_ELECTION -> {
                 ElectionReq electionReq = gson.fromJson(message.toJSONString(),ElectionReq.class);
-                System.out.println("Election, host by :"+electionReq.getServerId());
+                logger.info("Election msg received from %s".formatted(electionReq.getServerId()));
                 if(fastBullyService.getPriorityNumber(ChatServer.serverId)
                                 >fastBullyService.getPriorityNumber(electionReq.getServerId())){
                     fastBullyService.sendAnswer(electionReq.getServerId());
@@ -110,24 +149,30 @@ public class ServerMessageHandler {
 
             case Constant.TYPE_NOMINATION -> {
                 NominationReq nominationReq = gson.fromJson(message.toJSONString(),NominationReq.class);
+                logger.info("Nomination msg received from %s".formatted(nominationReq.getServerId()));
                 if(fastBullyService.getPriorityNumber(ChatServer.serverId)
                         >fastBullyService.getPriorityNumber(nominationReq.getServerId())){
+                    fastBullyService.waiting_for_nomination_or_coordinator = false;
                     fastBullyService.sendCoordinatorToLower(nominationReq.getServerId());
                 }
             }
 
             case Constant.TYPE_COORDINATOR -> {
                 CoordinatorReq leader = gson.fromJson(message.toJSONString(),CoordinatorReq.class);
-                if(fastBullyService.waiting_for_coordinator || fastBullyService.waiting_for_nomination_or_coordinator){
+                logger.info("Coordinator message received from %s".formatted(leader.getServerId()));
+
+//                if(fastBullyService.waiting_for_coordinator || fastBullyService.waiting_for_nomination_or_coordinator){
+                    logger.info("Leader is %s".formatted(leader.getServerId()));
                     FastBullyService.leader = leader.getServerId();
                     fastBullyService.waiting_for_nomination_or_coordinator = false;
                     fastBullyService.waiting_for_coordinator = false;
                     //TODO: cancel election
-                }
+//                }
                 //TODO: cancel election
             }
             case Constant.TYPE_ELECTIONANSWER -> {
                 ElectionAnswerReq electionAnswerReq = gson.fromJson(message.toJSONString(),ElectionAnswerReq.class);
+                logger.info("Election answer received from %s".formatted(electionAnswerReq.getServerId()));
                 if(fastBullyService.waiting_for_answer){
                     fastBullyService.getAnsweredServers().add(electionAnswerReq.getServerId());
                 }
@@ -145,6 +190,7 @@ public class ServerMessageHandler {
                 gossipHandler.handleGossipRes(gossipDataRes,connectionHandler);
                 connectionHandler.closeConnection();
             }
+
 
         }
     }

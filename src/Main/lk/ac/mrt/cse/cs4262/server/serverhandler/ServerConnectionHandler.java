@@ -26,6 +26,8 @@ public class ServerConnectionHandler extends Thread {
     private BufferedReader in;
     private JSONParser parser;
     private ServerMessageHandler messageHandler;
+    private boolean listenOnce = false;
+    private int responseCount =0;
     Future handler;
 
 //    public ServerConnectionHandler(Socket socket, FastBullyService fastBullyService) throws IOException {
@@ -46,11 +48,14 @@ public class ServerConnectionHandler extends Thread {
         messageHandler = ServerMessageHandler.getInstance();
     }
 
+    public void setListenOnce(boolean listenOnce) {
+        this.listenOnce = listenOnce;
+    }
 
     @Override
     public void run() {
         boolean wait = true;
-        while (wait){
+        while (wait && (!listenOnce || responseCount<1)){
             if(socket.isClosed()){
                 interrupt();
                 break;
@@ -58,10 +63,10 @@ public class ServerConnectionHandler extends Thread {
             try {
                 String s = in.readLine();
                 if(s !=null){
+                    responseCount+=1;
                     JSONObject message = (JSONObject) parser.parse(s);
                     messageHandler.handleMessage(message, this);
                 }
-
             } catch (IOException | ParseException e) {
                 wait = false;
                 interrupt();

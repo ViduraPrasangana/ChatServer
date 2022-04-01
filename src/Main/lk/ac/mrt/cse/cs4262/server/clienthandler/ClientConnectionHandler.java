@@ -41,6 +41,8 @@ public class ClientConnectionHandler extends Thread {
                 e.printStackTrace();
                 logger.info(client.getClientID()+": Connection issue. Manual Quit request sent" );
                 messageHandler.manualRequest(new QuitReq(),this);
+            }catch (NullPointerException ignored){
+
             }
         }
     }

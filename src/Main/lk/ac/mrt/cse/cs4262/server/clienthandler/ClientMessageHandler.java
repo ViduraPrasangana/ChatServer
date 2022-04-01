@@ -3,6 +3,7 @@ package lk.ac.mrt.cse.cs4262.server.clienthandler;
 import com.google.gson.Gson;
 import lk.ac.mrt.cse.cs4262.server.ChatServer;
 import lk.ac.mrt.cse.cs4262.server.Constant;
+import lk.ac.mrt.cse.cs4262.server.FastBullyService;
 import lk.ac.mrt.cse.cs4262.server.gossiphandler.GossipHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Request;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerMessageHandler;
@@ -12,6 +13,7 @@ import lk.ac.mrt.cse.cs4262.server.model.Client;
 import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.model.request.*;
 import lk.ac.mrt.cse.cs4262.server.model.response.*;
+import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -30,7 +32,12 @@ public class ClientMessageHandler {
     private final Gson gson;
     private HashMap<String,Client> clientsOnServer;
     private GossipHandler gossipHandler;
+    private FastBullyService fastBullyService;
+    Logger logger = Logger.getLogger(ClientMessageHandler.class);
 
+    public void setFastBullyService(FastBullyService fastBullyService) {
+        this.fastBullyService = fastBullyService;
+    }
 
     private ClientMessageHandler(){
         gson = new Gson();
@@ -67,15 +74,25 @@ public class ClientMessageHandler {
         switch (type){
             case Constant.TYPE_NEWIDENTITY -> {
                 NewIdentityReq newIdentityReq = gson.fromJson(message.toJSONString(),NewIdentityReq.class);
-
+                logger.info("New incoming identity request - %s".formatted(newIdentityReq.getIdentity()));
                 /** Identity Validation **/
                 String regex = "[a-zA-Z][a-zA-Z0-9]{2,15}";
                 Pattern p = Pattern.compile(regex);
                 Matcher m = p.matcher(newIdentityReq.getIdentity());
                 NewIdentityRes newIdentityRes;
-                if(m.matches()){
-                    //TODO: Cross server search for duplicate identity : Gossiping
 
+                boolean isIn;
+                if(FastBullyService.leader.equals(ChatServer.serverId)){
+                    logger.info("i'm the leader. Checking duplicate identity");
+                    isIn = gossipHandler.isInClient(newIdentityReq.getIdentity());
+                }else{
+                    logger.info("I'm not the leader. Asking from leader");
+                    LeaderAskClientReq leaderAskClientReq = new LeaderAskClientReq(newIdentityReq.getIdentity());
+                    isIn = (boolean) fastBullyService.askLeader(gson.toJson(leaderAskClientReq));
+                }
+
+                if(m.matches() && !isIn){
+                    logger.info("Identity does not exists in any server - %s".formatted(newIdentityReq.getIdentity()));
                     newIdentityRes = new NewIdentityRes("true");
                     Client client = new Client(newIdentityReq.getIdentity(), ChatServer.thisServer,connectionHandler);
                     connectionHandler.setClient(client);
@@ -88,17 +105,27 @@ public class ClientMessageHandler {
 
                     //TODO: Inform other servers about new identity : Gossiping
                 }else{
+                    logger.info("Identity exists in  server or minimum requirements does not match - %s".formatted(newIdentityReq.getIdentity()));
                     newIdentityRes = new NewIdentityRes("false");
                 }
                 String response = gson.toJson(newIdentityRes);
                 connectionHandler.send(response);
+                logger.info("Sending identity response to client");
 
             }
             case Constant.TYPE_LIST -> {
-                //TODO cross server search for all chat rooms
+                logger.info("List request incoming from - %s".formatted(connectionHandler.getClient().getClientID()));
+                String[] rooms;
+                if(FastBullyService.leader.equals(ChatServer.serverId)){
+                    logger.info("i'm the leader. getting all rooms details");
+                    rooms = gossipHandler.getGlobalChatrooms();
+                }else{
+                    logger.info("I'm not the leader. Asking from leader");
+                    LeaderAskAllRoomsReq leaderAskAllRoomsReq = new LeaderAskAllRoomsReq();
+                    rooms = (String[]) fastBullyService.askLeader(gson.toJson(leaderAskAllRoomsReq));
+                }
 
-                RoomListRes roomListRes = new RoomListRes(new String[]{"MainHall-s1", "MainHall-s2", "jokes"});
-
+                RoomListRes roomListRes = new RoomListRes(rooms);
                 connectionHandler.send(gson.toJson(roomListRes));
             }
             case Constant.TYPE_WHO -> {
@@ -114,6 +141,7 @@ public class ClientMessageHandler {
             case Constant.TYPE_CREATEROOM -> {
                 CreateRoomReq createRoomReq = gson.fromJson(message.toJSONString(),CreateRoomReq.class);
                 Client client = connectionHandler.getClient();
+                logger.info("New incoming create room request - %s".formatted(createRoomReq.getRoomid()));
 
                 /** RoomId Validation **/
                 String regex = "[a-zA-Z][a-zA-Z0-9]{2,15}";
@@ -122,7 +150,19 @@ public class ClientMessageHandler {
 
                 CreateRoomRes createRoomRes = new CreateRoomRes(createRoomReq.getRoomid(),false);
                 RoomChange roomChange;
-                if (m.matches() && !client.isOwner()){
+
+                boolean isIn;
+                if(FastBullyService.leader.equals(ChatServer.serverId)){
+                    logger.info("i'm the leader. Checking duplicate room name");
+                    isIn = gossipHandler.isInRoom(createRoomReq.getRoomid());
+                }else{
+                    logger.info("I'm not the leader. Asking from leader");
+                    LeaderAskRoomReq leaderAskRoomReq = new LeaderAskRoomReq(createRoomReq.getRoomid());
+                    isIn = (boolean) fastBullyService.askLeader(gson.toJson(leaderAskRoomReq));
+                }
+                logger.info("Room create response sent to client");
+
+                if (m.matches() && !client.isOwner() && !isIn){
                     Chatroom oldRoom = client.getChatroom();
                     boolean result = chatroomHandler.createRoom(ChatServer.thisServer,createRoomReq.getRoomid(),client);
                     if (result){
@@ -131,6 +171,7 @@ public class ClientMessageHandler {
                         connectionHandler.send(gson.toJson(createRoomRes));
                         connectionHandler.send(gson.toJson(roomChange));
 
+                        logger.info("Room change broadcast to everyone in old room");
                         broadcastToClients(gson.toJson(roomChange),oldRoom.getClientList());
                     }else{
                         connectionHandler.send(gson.toJson(createRoomRes));
@@ -143,10 +184,11 @@ public class ClientMessageHandler {
             case Constant.TYPE_JOINROOM -> {
                 JoinRoomReq joinRoomReq = gson.fromJson(message.toJSONString(),JoinRoomReq.class);
                 Client client = connectionHandler.getClient();
+                logger.info("New incoming join room request to %s".formatted(joinRoomReq.getRoomid()));
 
-                //TODO: verify from leader chatroom exists and chatroom id
-                Server serverOfRoom = ChatServer.thisServer;
 
+                //TODO: verify from **leader** chatroom exists and chatroom id
+                Server serverOfRoom = gossipHandler.getServerOfRoom(joinRoomReq.getRoomid());
 
                 if(connectionHandler.getClient().isOwner() || serverOfRoom == null){
 
@@ -169,11 +211,13 @@ public class ClientMessageHandler {
                     connectionHandler.send(gson.toJson(routeRes));
                     broadcastToClients(gson.toJson(roomChange),formerRoom.getClientList());
                     clientsOnServer.remove(client.getClientID());
+                    gossipHandler.updateClients();
                 }
 
             }
             case Constant.TYPE_MOVEJOIN -> {
                 MoveJoinReq moveJoinReq = gson.fromJson(message.toJSONString(),MoveJoinReq.class);
+                logger.info("New incoming movejoin room request to %s".formatted(moveJoinReq.getRoomid()));
                 Client client = new Client(moveJoinReq.getIdentity(),ChatServer.thisServer,connectionHandler);
                 connectionHandler.setClient(client);
                 if(chatroomHandler.isRoomExists(moveJoinReq.getRoomid())){
@@ -232,6 +276,7 @@ public class ClientMessageHandler {
                     manualRequest(deleteRoomReq,connectionHandler);
                 }
                 clientsOnServer.remove(connectionHandler.getClient().getClientID());
+                gossipHandler.updateClients();
             }
         }
     }

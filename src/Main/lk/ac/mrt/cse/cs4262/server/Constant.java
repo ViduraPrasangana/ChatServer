@@ -23,7 +23,12 @@ public class Constant {
     public static final String TYPE_COORDINATOR = "coordination";
     public static final String TYPE_VIEW = "view";
     public static final String TYPE_ASKCLIENT = "askclient";
+    public static final String TYPE_ASKCLIENTRES = "askclientres";
     public static final String TYPE_ASKROOM = "askroom";
+    public static final String TYPE_ASKROOMRES = "askroomres";
+    public static final String TYPE_ASKALLROOMRES = "askallroomres";
+    public static final String TYPE_ASKALLROOM = "askallroom";
+
 
 
     public static final String TYPE_GOSSIPINGREQ = "gossipingreq";

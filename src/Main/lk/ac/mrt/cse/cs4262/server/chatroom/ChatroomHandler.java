@@ -39,15 +39,10 @@ public class ChatroomHandler {
     }
 
     public synchronized Boolean createRoom(Server server, String chatRoomID, Client client) {
-
-        //check if a room exists in the same name
-        //TODO: leader should check
-        if (chatRooms.containsKey(chatRoomID)){
-            return false;
-        }
         Chatroom newRoom = new Chatroom(chatRoomID, server, client); // create new chatroom
         addClientToChatRoom(client,newRoom); // When the client successfully creates a room, it automatically joins the room
         chatRooms.put(chatRoomID,newRoom); // add the new chatroom to the chatroom list
+        gossipHandler.updateRooms();
         client.setOwner(true);
         return true;
     }
@@ -67,6 +62,7 @@ public class ChatroomHandler {
 
     public void addChatroom(Chatroom chatroom){
         chatRooms.put(chatroom.getChatroomID(),chatroom);
+        gossipHandler.updateRooms();
     }
 
     public boolean isRoomExists(String roomId){
@@ -82,6 +78,7 @@ public class ChatroomHandler {
             client.setChatroom(ChatServer.thisServer.getChatroom());
         });
         chatRooms.remove(roomID);
+        gossipHandler.updateRooms();
     }
 
     public void setGossipHandler(GossipHandler gossipHandler) {

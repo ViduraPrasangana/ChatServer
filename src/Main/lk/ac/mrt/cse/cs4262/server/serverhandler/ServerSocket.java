@@ -22,7 +22,7 @@ public class ServerSocket extends Thread{
         this.fastBullyService = fastBullyService;
         InetAddress ip = InetAddress.getLocalHost();
         String internal_address = ip.getHostAddress();
-        SocketAddress inetSocketAddress = new InetSocketAddress(internal_address,port);
+        SocketAddress inetSocketAddress = new InetSocketAddress(address,port);
         System.out.println(address+" "+port);
         socket.bind(inetSocketAddress);
     }
