@@ -133,14 +133,14 @@ public class ServerMessageHandler {
                 }
             }
             case Constant.TYPE_GOSSIPINGREQ -> {
-                System.out.println("gossip req");
-                System.out.println(message.toJSONString());
+//                System.out.println("gossip req");
+//                System.out.println(message.toJSONString());
                 GossipDataReq gossipDataReq = gson.fromJson(message.toJSONString(),GossipDataReq.class);
                 gossipHandler.handleGossipReq(gossipDataReq,connectionHandler);
             }
             case Constant.TYPE_GOSSIPINGRES -> {
-                System.out.println("gossip res");
-                System.out.println(message.toJSONString());
+//                System.out.println("gossip res");
+//                System.out.println(message.toJSONString());
                 GossipDataRes gossipDataRes = gson.fromJson(message.toJSONString(),GossipDataRes.class);
                 gossipHandler.handleGossipRes(gossipDataRes,connectionHandler);
                 connectionHandler.closeConnection();

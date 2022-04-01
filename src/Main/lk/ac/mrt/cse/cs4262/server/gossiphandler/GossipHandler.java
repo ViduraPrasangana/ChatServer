@@ -3,6 +3,7 @@ package lk.ac.mrt.cse.cs4262.server.gossiphandler;
 import com.google.gson.Gson;
 import lk.ac.mrt.cse.cs4262.server.Connectable;
 import lk.ac.mrt.cse.cs4262.server.Constant;
+import lk.ac.mrt.cse.cs4262.server.FastBullyService;
 import lk.ac.mrt.cse.cs4262.server.chatroom.ChatroomHandler;
 import lk.ac.mrt.cse.cs4262.server.clienthandler.ClientMessageHandler;
 import lk.ac.mrt.cse.cs4262.server.model.Client;
@@ -11,6 +12,7 @@ import lk.ac.mrt.cse.cs4262.server.model.request.GossipDataReq;
 import lk.ac.mrt.cse.cs4262.server.model.response.GossipDataRes;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerMessageHandler;
+import org.apache.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -43,6 +45,8 @@ public class GossipHandler {
     private Random random = new Random();
     private int gossipFanout;
     int c = 0;
+
+    private Logger logger =  Logger.getLogger(GossipHandler.class);
     /**
      * Setup the client's lists, gossiping parameters, and parse the startup config file.
      * @throws SocketException
@@ -86,7 +90,7 @@ public class GossipHandler {
 
     public void start() {
 //        socketServer.start();
-        System.out.println("started");
+        logger.info("Gossipping Started!");
         taskFuture = gossipExecutor.scheduleAtFixedRate(this::doGossip,
                 gossipIntervalMs,
                 gossipIntervalMs,
@@ -94,7 +98,7 @@ public class GossipHandler {
     }
     public void doGossip() {
 //        if (serverData.isEmpty()) {
-            System.out.println("using servers");
+//            System.out.println("using servers");
             sendGossip(new ArrayList<>(servers), gossipFanout);
 //        } else {
 //            System.out.println("using server data");
@@ -103,14 +107,15 @@ public class GossipHandler {
     }
     private void sendGossip(ArrayList<Connectable> knownClusterNodes, int gossipFanout) {
         if (knownClusterNodes.isEmpty()) {
-            System.out.println("clusters empty");
+            logger.info("Cluster is empty.");
+//            System.out.println("clusters empty");
             return;
         }
         for (int i = 0; i < knownClusterNodes.size(); i++) {
-            System.out.println(knownClusterNodes.size());
+            logger.info("Cluster Size is %s : %s".formatted(knownClusterNodes.size()));
             Connectable server = knownClusterNodes.get(i);
             if(doSend()){
-                System.out.println("sending to node "+server.getAddress().toString()+" "+String.valueOf(server.getCoordinationPort()));
+                logger.info("Sending to node %s : %s".formatted(server.getAddress(),server.getCoordinationPort()));
                 sendGossipTo(server);
             }
         }
@@ -124,38 +129,44 @@ public class GossipHandler {
             ServerConnectionHandler connectionHandler = new ServerConnectionHandler(socket);
             connectionHandler.start();
             GossipDataReq gossipDataReq = new GossipDataReq(serverData);
-            System.out.println(gson.toJson(gossipDataReq));
+//            System.out.println(gson.toJson(gossipDataReq));
             connectionHandler.send(gson.toJson(gossipDataReq));
+            logger.info("send Gossip to %s".formatted(server.getAddress()));
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.warn("Failed to send Gossip to %s".formatted(server.getAddress()));
+//            e.printStackTrace();
         }
     }
     public void handleGossipReq(GossipDataReq gossipDataReq, ServerConnectionHandler connectionHandler){
-        System.out.println("before gossip req");
-        System.out.println(gson.toJson(serverData));
+//        System.out.println("before gossip req");
+//        System.out.println(gson.toJson(serverData));
         HashMap<String, ServerState> incomingServerData = gossipDataReq.getServerData();
         merge(incomingServerData);
-        System.out.println("after merge req");
-        System.out.println(gson.toJson(serverData));
+//        System.out.println("after merge req");
+//        System.out.println(gson.toJson(serverData));
         HashMap<String, ServerState> diff = delta(this.serverData, incomingServerData);
         GossipDataRes gossipDataRes = new GossipDataRes(diff);
         if(connectionHandler !=null){
             try {
                 connectionHandler.send(gson.toJson(gossipDataRes));
             } catch (IOException e){
-                e.printStackTrace();
+                logger.warn("Failed to handle Gossip Request");
+//                e.printStackTrace();
             }
 
         }
     }
     public void handleGossipRes(GossipDataRes gossipDataRes, ServerConnectionHandler connectionHandler){
-        System.out.println("before gossip res");
-        System.out.println(gson.toJson(serverData));
+//        System.out.println("before gossip res");
+//        System.out.println(gson.toJson(serverData));
         HashMap<String, ServerState> incomingServerData = gossipDataRes.getServerData();
         merge(incomingServerData);
-        System.out.println("after merge res");
-        System.out.println(gson.toJson(serverData));
+        logger.info("Merge the Recieved Data with Existing Data");
+//        System.out.println("after merge res");
+//        System.out.println(gson.toJson(serverData));
     }
+
+//
     public HashMap<String, ServerState> delta(HashMap<String, ServerState> fromMap, HashMap<String, ServerState> toMap) {
         HashMap<String, ServerState> delta = new HashMap<>();
         for (String key : fromMap.keySet()) {
