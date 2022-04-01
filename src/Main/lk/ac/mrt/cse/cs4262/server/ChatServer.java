@@ -47,7 +47,7 @@ public class ChatServer {
 
 
             GossipHandler gossipHandler = new GossipHandler(thisServer,config.getServers());
-//            gossipHandler.start();
+            gossipHandler.start();
         }catch (IOException | CmdLineException | InterruptedException e){
             e.printStackTrace();
         }
