@@ -25,6 +25,8 @@ public class Constant {
     public static final String TYPE_ASKCLIENT = "askclient";
     public static final String TYPE_ASKCLIENTRES = "askclientres";
     public static final String TYPE_ASKROOM = "askroom";
+    public static final String TYPE_ASKSERVERROOM = "askserverroom";
+    public static final String TYPE_ASKSERVERROOMRES = "askserverroomres";
     public static final String TYPE_ASKROOMRES = "askroomres";
     public static final String TYPE_ASKALLROOMRES = "askallroomres";
     public static final String TYPE_ASKALLROOM = "askallroom";

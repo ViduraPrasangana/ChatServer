@@ -111,7 +111,7 @@ public class ClientMessageHandler {
                 String response = gson.toJson(newIdentityRes);
                 connectionHandler.send(response);
                 logger.info("Sending identity response to client");
-
+                gossipHandler.doGossip();
             }
             case Constant.TYPE_LIST -> {
                 logger.info("List request incoming from - %s".formatted(connectionHandler.getClient().getClientID()));
@@ -179,6 +179,7 @@ public class ClientMessageHandler {
                 }else{
                     connectionHandler.send(gson.toJson(createRoomRes));
                 }
+                gossipHandler.doGossip();
             }
 
             case Constant.TYPE_JOINROOM -> {
@@ -190,13 +191,23 @@ public class ClientMessageHandler {
                 //TODO: verify from **leader** chatroom exists and chatroom id
                 Server serverOfRoom = gossipHandler.getServerOfRoom(joinRoomReq.getRoomid());
 
-                if(connectionHandler.getClient().isOwner() || serverOfRoom == null){
+                if(FastBullyService.leader.equals(ChatServer.serverId)){
+                    logger.info("i'm the leader. getting all rooms details");
+                    serverOfRoom = gossipHandler.getServerOfRoom(joinRoomReq.getRoomid());
+                }else{
+                    logger.info("I'm not the leader. Asking from leader");
+                    LeaderAskServerRoomReq leaderAskAllRoomsReq = new LeaderAskServerRoomReq(joinRoomReq.getRoomid());
+                    serverOfRoom = (Server) fastBullyService.askLeader(gson.toJson(leaderAskAllRoomsReq));
+                }
 
+                if(connectionHandler.getClient().isOwner() || serverOfRoom == null){
+                    logger.info("There is no such room or client is an owner "+serverOfRoom);
                     RoomChange roomChange = new RoomChange(client.getClientID(), client.getChatroom().getChatroomID(),  client.getChatroom().getChatroomID());
                     connectionHandler.send(gson.toJson(roomChange));
 
                 }else if(serverOfRoom.getServerId().equals(ChatServer.thisServer.getServerId())){
                     Chatroom formerRoom = client.getChatroom();
+                    logger.info("Room is in this server");
 
                     chatroomHandler.addClientToChatRoom(client,joinRoomReq.getRoomid());
                     RoomChange roomChange = new RoomChange(client.getClientID(),formerRoom.getChatroomID(), client.getChatroom().getChatroomID());
@@ -204,6 +215,8 @@ public class ClientMessageHandler {
                     broadcastToClients(gson.toJson(roomChange), formerRoom.getClientList());
                     broadcastToClients(gson.toJson(roomChange), client.getChatroom().getClientList());
                 }else {
+                    logger.info("Room is in another server"+serverOfRoom.getAddress()+" "+String.valueOf(serverOfRoom.getClientsPort()));
+
                     Chatroom formerRoom = client.getChatroom();
                     client.getChatroom().removeClient(client.getClientID());
                     RouteRes routeRes = new RouteRes(joinRoomReq.getRoomid(), serverOfRoom.getAddress(),String.valueOf(serverOfRoom.getClientsPort()));
@@ -213,6 +226,8 @@ public class ClientMessageHandler {
                     clientsOnServer.remove(client.getClientID());
                     gossipHandler.updateClients();
                 }
+                gossipHandler.doGossip();
+
 
             }
             case Constant.TYPE_MOVEJOIN -> {
@@ -221,6 +236,7 @@ public class ClientMessageHandler {
                 Client client = new Client(moveJoinReq.getIdentity(),ChatServer.thisServer,connectionHandler);
                 connectionHandler.setClient(client);
                 if(chatroomHandler.isRoomExists(moveJoinReq.getRoomid())){
+                    logger.info("Room exists in this server");
                     addClientToServer(client);
                     chatroomHandler.addClientToChatRoom(connectionHandler.getClient(),moveJoinReq.getRoomid());
                     RoomChange roomChange = new RoomChange(moveJoinReq.getIdentity(), moveJoinReq.getFormer(), moveJoinReq.getRoomid());
@@ -229,12 +245,15 @@ public class ClientMessageHandler {
                     broadcastToClients(gson.toJson(roomChange),chatroomHandler.getChatroom(moveJoinReq.getRoomid()).getClientList());
                     connectionHandler.send(gson.toJson(serverChange));
                 }else{
+                    logger.info("Room exists in this server. moving to mainhall");
                     Chatroom newRoom = ChatServer.thisServer.getChatroom();
                     chatroomHandler.addClientToChatRoom(connectionHandler.getClient(),newRoom);
                     RoomChange roomChange = new RoomChange(moveJoinReq.getIdentity(), moveJoinReq.getFormer(), newRoom.getChatroomID());
 
                     broadcastToClients(gson.toJson(roomChange),newRoom.getClientList());
                 }
+                gossipHandler.doGossip();
+
             }
             case Constant.TYPE_MESSAGE -> {
                 MessageReq messageReq = gson.fromJson(message.toJSONString(),MessageReq.class);
@@ -262,6 +281,7 @@ public class ClientMessageHandler {
                     deleteRoomRes = new DeleteRoomRes(deleteRoomReq.getRoomid(), false);
                 }
                 connectionHandler.send(gson.toJson(deleteRoomRes));
+                gossipHandler.doGossip();
             }
             case Constant.TYPE_QUIT -> {
                 Client client = connectionHandler.getClient();
@@ -277,6 +297,8 @@ public class ClientMessageHandler {
                 }
                 clientsOnServer.remove(connectionHandler.getClient().getClientID());
                 gossipHandler.updateClients();
+                gossipHandler.doGossip();
+
             }
         }
     }
@@ -295,6 +317,7 @@ public class ClientMessageHandler {
     public void broadcastToClients(String massage, ArrayList<Client> clients){
         clients.forEach(client -> {
             client.getConnectionHandler().send(massage);
+
         });
     }
 

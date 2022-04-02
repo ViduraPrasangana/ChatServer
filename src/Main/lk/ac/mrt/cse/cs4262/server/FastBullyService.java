@@ -7,6 +7,7 @@ import lk.ac.mrt.cse.cs4262.server.model.request.*;
 import lk.ac.mrt.cse.cs4262.server.model.response.LeaderAskAllRoomsRes;
 import lk.ac.mrt.cse.cs4262.server.model.response.LeaderAskClientRes;
 import lk.ac.mrt.cse.cs4262.server.model.response.LeaderAskRoomRes;
+import lk.ac.mrt.cse.cs4262.server.model.response.LeaderAskServerRoomRes;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerConnectionHandler;
 import lk.ac.mrt.cse.cs4262.server.serverhandler.ServerMessageHandler;
 import org.apache.log4j.Logger;
@@ -171,6 +172,10 @@ public class FastBullyService extends Thread{
                 case Constant.TYPE_ASKALLROOMRES -> {
                     LeaderAskAllRoomsRes leaderAskAllRoomsRes = gson.fromJson(message.toJSONString(),LeaderAskAllRoomsRes.class);
                     return leaderAskAllRoomsRes.getAllrooms();
+                }
+                case Constant.TYPE_ASKSERVERROOMRES -> {
+                    LeaderAskServerRoomRes leaderAskAllRoomsRes = gson.fromJson(message.toJSONString(),LeaderAskServerRoomRes.class);
+                    return ChatServer.servers.get(leaderAskAllRoomsRes.getServerId());
                 }
             }
 

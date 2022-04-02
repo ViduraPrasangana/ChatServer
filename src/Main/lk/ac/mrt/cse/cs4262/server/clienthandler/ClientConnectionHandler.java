@@ -38,7 +38,6 @@ public class ClientConnectionHandler extends Thread {
                 JSONObject message = (JSONObject) parser.parse(in.readLine());
                 messageHandler.handleMessage(message,this);
             } catch (IOException | ParseException e) {
-                e.printStackTrace();
                 logger.info(client.getClientID()+": Connection issue. Manual Quit request sent" );
                 messageHandler.manualRequest(new QuitReq(),this);
             }catch (NullPointerException ignored){
@@ -54,7 +53,6 @@ public class ClientConnectionHandler extends Thread {
             out.write((res + "\n").getBytes("UTF-8"));
             out.flush();
         }catch (IOException e){
-            e.printStackTrace();
         }
     }
 

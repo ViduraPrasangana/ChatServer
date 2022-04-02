@@ -5,11 +5,9 @@ import lk.ac.mrt.cse.cs4262.server.ChatServer;
 import lk.ac.mrt.cse.cs4262.server.Constant;
 import lk.ac.mrt.cse.cs4262.server.FastBullyService;
 import lk.ac.mrt.cse.cs4262.server.gossiphandler.GossipHandler;
+import lk.ac.mrt.cse.cs4262.server.model.Server;
 import lk.ac.mrt.cse.cs4262.server.model.request.*;
-import lk.ac.mrt.cse.cs4262.server.model.response.GossipDataRes;
-import lk.ac.mrt.cse.cs4262.server.model.response.LeaderAskAllRoomsRes;
-import lk.ac.mrt.cse.cs4262.server.model.response.LeaderAskClientRes;
-import lk.ac.mrt.cse.cs4262.server.model.response.LeaderAskRoomRes;
+import lk.ac.mrt.cse.cs4262.server.model.response.*;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 
@@ -62,7 +60,7 @@ public class ServerMessageHandler {
                     e.printStackTrace();
                 }
             }
-            case Constant.TYPE_ASKALLROOMRES -> {
+            case Constant.TYPE_ASKALLROOM -> {
                 LeaderAskAllRoomsReq leaderAskAllRoomsReq = gson.fromJson(message.toJSONString(),LeaderAskAllRoomsReq.class);
                 logger.info("Ask for 'all rooms' msg received.");
 
@@ -85,6 +83,22 @@ public class ServerMessageHandler {
                 LeaderAskRoomRes leaderAskRoomRes = new LeaderAskRoomRes(isIn);
 
                 logger.info("Room is in one of servers - %s".formatted(isIn));
+
+                try {
+                    logger.info("Sending response to server");
+                    connectionHandler.send((gson.toJson(leaderAskRoomRes)));
+                    connectionHandler.closeConnection();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            case Constant.TYPE_ASKSERVERROOM -> {
+                LeaderAskServerRoomReq leaderAskRoomReq = gson.fromJson(message.toJSONString(),LeaderAskServerRoomReq.class);
+                logger.info("Ask for 'what is the server of room' msg received. room - %s".formatted(leaderAskRoomReq.getRoomId()));
+
+                Server s = gossipHandler.getServerOfRoom(leaderAskRoomReq.getRoomId());
+                LeaderAskServerRoomRes leaderAskRoomRes = new LeaderAskServerRoomRes(s.getServerId());
+
 
                 try {
                     logger.info("Sending response to server");

@@ -3,10 +3,10 @@ package lk.ac.mrt.cse.cs4262.server.model.request;
 import lk.ac.mrt.cse.cs4262.server.Constant;
 import lk.ac.mrt.cse.cs4262.server.model.Request;
 
-public class LeaderAskRoomReq extends Request {
+public class LeaderAskServerRoomReq extends Request {
     private String roomId;
-    public LeaderAskRoomReq(String roomId) {
-        super(Constant.TYPE_ASKROOM);
+    public LeaderAskServerRoomReq(String roomId) {
+        super(Constant.TYPE_ASKSERVERROOM);
         this.roomId = roomId;
     }
 

@@ -16,15 +16,12 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class GossipHandler {
+public class GossipHandler{
 
     private HashMap<String,ServerState> serverData;
     private final ArrayList<Server> servers;
@@ -86,34 +83,37 @@ public class GossipHandler {
     public void start() {
 //        socketServer.start();
         logger.info("Gossipping Started!");
-        taskFuture = gossipExecutor.scheduleAtFixedRate(this::doGossip,
-                gossipIntervalMs,
-                gossipIntervalMs,
-                TimeUnit.MILLISECONDS);
+//        taskFuture = gossipExecutor.scheduleAtFixedRate(this::doGossip,
+//                gossipIntervalMs,
+//                gossipIntervalMs,
+//                TimeUnit.MILLISECONDS);
+        doGossip();
     }
     public void doGossip() {
 //        if (serverData.isEmpty()) {
 //            System.out.println("using servers");
-            sendGossip(new ArrayList<>(servers), gossipFanout);
+        sendGossip(new ArrayList<>(servers), gossipFanout);
 //        } else {
 //            System.out.println("using server data");
 //            sendGossip(new ArrayList<>(serverData.values()), gossipFanout);
 //        }
     }
     private void sendGossip(ArrayList<Connectable> knownClusterNodes, int gossipFanout) {
+
         if (knownClusterNodes.isEmpty()) {
             logger.info("Cluster is empty.");
 //            System.out.println("clusters empty");
             return;
         }
+        logger.info("Gossiping to %s servers".formatted(knownClusterNodes.size()));
         for (int i = 0; i < knownClusterNodes.size(); i++) {
-            logger.info("Cluster Size is %s : %s".formatted(knownClusterNodes.size()));
             Connectable server = knownClusterNodes.get(i);
             if(doSend()){
-                logger.info("Sending to node %s : %s".formatted(server.getAddress(),server.getCoordinationPort()));
+//                logger.info("Sending to node %s : %s".formatted(server.getAddress(),server.getCoordinationPort()));
                 sendGossipTo(server);
             }
         }
+        logger.info("Done gossiping");
     }
     private boolean doSend() {
         return random.nextInt(10)<7.5;
@@ -124,12 +124,10 @@ public class GossipHandler {
             ServerConnectionHandler connectionHandler = new ServerConnectionHandler(socket);
             connectionHandler.start();
             GossipDataReq gossipDataReq = new GossipDataReq(serverData);
-//            System.out.println(gson.toJson(gossipDataReq));
             connectionHandler.send(gson.toJson(gossipDataReq));
-            logger.info("send Gossip to %s".formatted(server.getAddress()));
+//            logger.info("sent Gossip to %s".formatted(server.getAddress()));
         } catch (IOException e) {
-            logger.warn("Failed to send Gossip to %s".formatted(server.getAddress()));
-//            e.printStackTrace();
+//            logger.warn("Failed to send Gossip to %s".formatted(server.getAddress()));
         }
     }
     public void handleGossipReq(GossipDataReq gossipDataReq, ServerConnectionHandler connectionHandler){
@@ -150,15 +148,12 @@ public class GossipHandler {
             }
 
         }
+        logger.info("Gossip data updated");
     }
     public void handleGossipRes(GossipDataRes gossipDataRes, ServerConnectionHandler connectionHandler){
-//        System.out.println("before gossip res");
-//        System.out.println(gson.toJson(serverData));
         HashMap<String, ServerState> incomingServerData = gossipDataRes.getServerData();
         merge(incomingServerData);
-        logger.info("Merge the Recieved Data with Existing Data");
-//        System.out.println("after merge res");
-//        System.out.println(gson.toJson(serverData));
+//        logger.info("Merge the Recieved Data with Existing Data");
     }
 
 //
@@ -183,6 +178,7 @@ public class GossipHandler {
         for (String diffKey : diff.keySet()) {
             if(!serverData.containsKey(diffKey)) {
                 serverData.put(diffKey, diff.get(diffKey));
+                System.out.println(List.of(diff.get(diffKey)));
             } else {
                 ServerState stateMap = serverData.get(diffKey);
                 stateMap.putAll(diff.get(diffKey));
@@ -204,13 +200,24 @@ public class GossipHandler {
     public boolean isInClient(String client){
         AtomicBoolean isIn = new AtomicBoolean(false);
         serverData.forEach((s, serverState) -> {
-            String[] clients = (String[]) serverState.getValues().get(Constant.GOSSIPDATA_CLIENTS).getValue();
-            for (String s1 :
-                    clients) {
-                if (s1.equals(client)) {
-                    isIn.set(true);
+            try{
+                ArrayList<String> clients = (ArrayList<String>) serverState.getValues().get(Constant.GOSSIPDATA_CLIENTS).getValue();
+                for (String s1 :
+                        clients) {
+                    if (s1.equals(client)) {
+                        isIn.set(true);
                     }
                 }
+            }catch (ClassCastException e){
+                String[] clients = (String[]) serverState.getValues().get(Constant.GOSSIPDATA_CLIENTS).getValue();
+                for (String s1 :
+                        clients) {
+                    if (s1.equals(client)) {
+                        isIn.set(true);
+                    }
+                }
+            }
+
         });
         return isIn.get();
     }
@@ -219,8 +226,13 @@ public class GossipHandler {
         ArrayList<String> chatrooms = new ArrayList<>();
 
         serverData.forEach((s, serverState) -> {
-            String[] rooms = (String[]) serverState.getValues().get(Constant.GOSSIPDATA_ROOMS).getValue();
-            chatrooms.addAll(List.of(rooms));
+            try{
+                String[] rooms = (String[]) serverState.getValues().get(Constant.GOSSIPDATA_ROOMS).getValue();
+                chatrooms.addAll(List.of(rooms));
+            }catch (ClassCastException e){
+                ArrayList<String> rooms = (ArrayList<String>) serverState.getValues().get(Constant.GOSSIPDATA_ROOMS).getValue();
+                chatrooms.addAll(rooms);
+            }
         });
         return chatrooms.toArray(new String[0]);
     }
@@ -228,11 +240,21 @@ public class GossipHandler {
     public boolean isInRoom(String roomid) {
         AtomicBoolean isIn = new AtomicBoolean(false);
         serverData.forEach((s, serverState) -> {
-            String[] rooms = (String[]) serverState.getValues().get(Constant.GOSSIPDATA_ROOMS).getValue();
-            for (String r1 :
-                    rooms) {
-                if (r1.equals(roomid)) {
-                    isIn.set(true);
+            try{
+                String[] rooms = (String[]) serverState.getValues().get(Constant.GOSSIPDATA_ROOMS).getValue();
+                for (String r1 :
+                        rooms) {
+                    if (r1.equals(roomid)) {
+                        isIn.set(true);
+                    }
+                }
+            }catch (ClassCastException e){
+                ArrayList<String> rooms = (ArrayList<String>) serverState.getValues().get(Constant.GOSSIPDATA_ROOMS).getValue();
+                for (String r1 :
+                        rooms) {
+                    if (r1.equals(roomid)) {
+                        isIn.set(true);
+                    }
                 }
             }
         });
@@ -240,16 +262,31 @@ public class GossipHandler {
     }
 
     public Server getServerOfRoom(String roomid) {
-        AtomicReference<Server> server = new AtomicReference<>(null);
+        AtomicReference<Server> server = new AtomicReference<>(ChatServer.thisServer);
         serverData.forEach((s, serverState) -> {
-            String[] rooms = (String[]) serverState.getValues().get(Constant.GOSSIPDATA_ROOMS).getValue();
-            for (String r1 :
-                    rooms) {
-                if (r1.equals(roomid)) {
-                    server.set(ChatServer.servers.get(s));
+            try{
+                String[] rooms = (String[]) serverState.getValues().get(Constant.GOSSIPDATA_ROOMS).getValue();
+                for (String r1 :
+                        rooms) {
+                    if (r1.equals(roomid)) {
+                        server.set(ChatServer.servers.get(s));
+                        System.out.println(s+ChatServer.servers.get(s));
+                    }
+                }
+            }catch (ClassCastException e){
+                ArrayList<String> rooms = (ArrayList<String>) serverState.getValues().get(Constant.GOSSIPDATA_ROOMS).getValue();
+                for (String r1 :
+                        rooms) {
+                    if (r1.equals(roomid)) {
+                        server.set(ChatServer.servers.get(s));
+                        System.out.println(s+ChatServer.servers.get(s));
+                    }
                 }
             }
         });
+        if(server.get()==null){
+            return ChatServer.thisServer;
+        }
         return server.get();
     }
 }

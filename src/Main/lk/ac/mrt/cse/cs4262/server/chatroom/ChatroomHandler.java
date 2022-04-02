@@ -62,7 +62,7 @@ public class ChatroomHandler {
 
     public void addChatroom(Chatroom chatroom){
         chatRooms.put(chatroom.getChatroomID(),chatroom);
-        gossipHandler.updateRooms();
+        if(gossipHandler!=null)gossipHandler.updateRooms();
     }
 
     public boolean isRoomExists(String roomId){

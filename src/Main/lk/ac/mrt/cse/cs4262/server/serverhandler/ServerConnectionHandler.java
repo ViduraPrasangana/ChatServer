@@ -70,7 +70,7 @@ public class ServerConnectionHandler extends Thread {
             } catch (IOException | ParseException e) {
                 wait = false;
                 interrupt();
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }
     }
